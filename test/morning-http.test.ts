@@ -86,7 +86,8 @@ it('takes a representative screened candidate through cited assessment publicati
     await reports.publish(lease,id); await reports.certify(lease,id);
     const { request } = await authenticated(() => now+2*86400000);
     const html = await (await request('/morning/morning%3Acited')).text();
-    expect(html).toContain('A · new');
+    expect(html).toContain('A (BROKER_A) · new');
+    expect(html).toContain('Account availability unverified');
     expect(html).toContain('EXPIRED / stale assessment');
     expect(html).toContain('A contract was signed.');
     expect(html).toContain('https://www.sec.gov/Archives/edgar/data/1/000000000126000001/event.txt');

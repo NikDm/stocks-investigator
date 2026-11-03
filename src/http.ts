@@ -1,4 +1,4 @@
-import { dashboard, reportView, assessmentView, page, escape, css } from './morning/view';
+import { dashboard, reportView, assessmentView, page, escape, css, sourceHref } from './morning/view';
 import { evidenceSchema } from './research/assessment';
 import { ReviewFeedback } from './morning/feedback';
 import { ResearchPublisher } from './research/publisher';
@@ -115,7 +115,7 @@ export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => num
     const row = await c.env.DB.prepare('SELECT value FROM research_evidence WHERE id=?').bind(c.req.param('id')).first<{ value: string }>();
     if (!row) return c.text('Evidence unavailable',404);
     const evidence = evidenceSchema.parse(JSON.parse(row.value));
-    return c.html(page('Evidence',`<a href="/">Dashboard</a><p><a href="${escape(/^https?:\/\//.test(evidence.url) ? evidence.url : '#')}">Original source</a></p><p>Published: ${evidence.publishedAt===null ? 'unknown' : new Date(evidence.publishedAt).toISOString()}; acquired: ${new Date(evidence.acquiredAt).toISOString()}.</p><blockquote>${escape(evidence.text)}</blockquote><p>Sanitized excerpt only; full replay unavailable.</p>`));
+    return c.html(page('Evidence',`<a href="/">Dashboard</a><p><a href="${sourceHref(evidence.url)}">Original source</a></p><p>Published: ${evidence.publishedAt===null ? 'unknown' : new Date(evidence.publishedAt).toISOString()}; acquired: ${new Date(evidence.acquiredAt).toISOString()}.</p><blockquote>${escape(evidence.text)}</blockquote><p>Sanitized excerpt only; full replay unavailable.</p>`));
   });
   app.use('/morning/*/feedback',bodyLimit({ maxSize: 8192, onError: c => c.text('Request too large',413) }));
   const feedback = async (c: import('hono').Context<{ Bindings: Env; Variables: { identity: string } }>, form: boolean) => {

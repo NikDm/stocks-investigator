@@ -165,7 +165,7 @@ export async function enqueueMarket(store: Foundation, clock: () => number = Dat
   const now = clock(), date = localDate(now,'Europe/Zagreb');
   const start = instant(date,'06:30','Europe/Zagreb'), end = instant(date,'08:00','Europe/Zagreb');
   const due = await morningStatus(store,now);
-  if (due.session==='open' && now>=end && due.state.startsWith('Overdue')) {
+  if (due.session==='open' && now>=end && due.overdue) {
     await store.db.prepare("INSERT INTO morning_due_events(report_date,at,code) VALUES(?,?,'overdue') ON CONFLICT DO NOTHING").bind(date,now).run();
   }
   if (due.session!=='closed' && now >= start && now < end) await store.enqueue(`market:screen-eval-v1:${date}:morning`,{ kind: 'market', reportDate: date, seed: false },now);

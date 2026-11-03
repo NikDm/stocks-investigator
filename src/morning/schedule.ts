@@ -8,7 +8,7 @@ export async function morningStatus(store: Foundation, now: number) {
   const known = snapshot && snapshot.calendarFrom<=date && snapshot.calendarThrough>=date;
   const session = known ? snapshot.calendar.find(s => s.date===date) : undefined;
   const current = await store.db.prepare('SELECT id FROM morning_reports WHERE report_date=?').bind(date).first<{ id: string }>();
-  return { date, deadline, session: !known ? 'unknown' as const : session ? 'open' as const : 'closed' as const, expectedSession: known ? snapshot.calendar.filter(s => s.date<date).at(-1)?.date ?? null : null,
+  return { date, deadline, overdue: Boolean(known && session && !current && now>=deadline), session: !known ? 'unknown' as const : session ? 'open' as const : 'closed' as const, expectedSession: known ? snapshot.calendar.filter(s => s.date<date).at(-1)?.date ?? null : null,
     state: !known ? 'Calendar unavailable; current session unverified' : !session ? 'Exchange closed; no morning report due'
       : current ? 'Current trading day' : now>=deadline ? 'Overdue / unavailable: current morning report missing' : 'Current morning report pending' };
 }

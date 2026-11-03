@@ -3,12 +3,13 @@ import { MarketCapture } from '../market/capture';
 import { Screener } from '../screening/persistence';
 import { ResearchPublisher, type PublishedDecision } from '../research/publisher';
 import type { WatchPublication } from '../research/intake';
-import type { Snapshot } from '../market/types';
+import type { Snapshot, Identity, Decision } from '../market/types';
 
 type Novelty = { securityId: string; kind: 'new' | 'repeat' | 'promoted/new'; previousDate: string | null; previousVersion: string | null; changes: string[] };
 export type MorningValue = {
   snapshot: Omit<Snapshot,'decisions'>; universe: { snapshotId: string; count: number }; inputHash: string;
   baseline: string[]; main: string[]; decisions: PublishedDecision[]; watch: WatchPublication;
+  securities: Pick<Identity,'securityId' | 'symbol' | 'brokerTicker' | 'asof' | 'primaryVenue'>[];
   novelty: Novelty[]; status: 'complete' | 'partial' | 'empty' | 'unavailable'; gaps: string[];
 };
 type Row = { id: string; run_id: string; report_date: string; rule_version: string; cutoff: number; deadline: number; artifact_at: number; hash: string; value: string };
@@ -49,6 +50,13 @@ export class MorningReports {
     const cutoff = Math.max(snapshot.cutoff,research.cutoff,watch.cutoff);
     const now = this.clock();
     if (cutoff>now || research.publishedAt>now) throw new Error('clock before morning inputs');
+    const securities: MorningValue['securities'] = [];
+    for (const securityId of [...new Set([...research.main,...watch.active.map(w => w.securityId)])]) {
+      const row = await db.prepare("SELECT value FROM market_decisions WHERE snapshot_id=? AND security_id=? AND reason='eligible'").bind(snapshotId,securityId).first<{ value: string }>();
+      const identity = row ? (JSON.parse(row.value) as Decision).identity : null;
+      if (!identity) throw new Error('morning identity unavailable');
+      securities.push({ securityId, symbol: identity.symbol, brokerTicker: identity.brokerTicker, asof: identity.asof, primaryVenue: identity.primaryVenue });
+    }
     const novelty: Novelty[] = [];
     for (const securityId of research.main) {
       const prior = await db.prepare(`SELECT r.report_date,d.value FROM morning_reports r JOIN research_decisions d ON d.snapshot_id=r.id
@@ -68,7 +76,7 @@ export class MorningReports {
       : research.main.length===0 && watch.active.length===0 ? 'empty' : 'complete';
     const { decisions: _decisions,...manifest } = snapshot;
     const value: MorningValue = { snapshot: manifest, universe: { snapshotId, count: universe!.count }, inputHash: screening.inputHash,
-      baseline: research.baseline, main: research.main, decisions: research.decisions, watch, novelty, status, gaps: [...new Set(gaps)] };
+      securities, baseline: research.baseline, main: research.main, decisions: research.decisions, watch, novelty, status, gaps: [...new Set(gaps)] };
     const encoded = JSON.stringify(value), digest = await hash(encoded);
     await this.foundation.fenced(lease,now,[
       db.prepare('INSERT INTO morning_reports(id,run_id,report_date,rule_version,cutoff,deadline,artifact_at,hash,value) VALUES(?,?,?,?,?,?,?,?,?)')
