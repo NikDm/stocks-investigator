@@ -57,5 +57,12 @@ INSERT INTO research_assessment_versions VALUES('restore-assessment','restore-sn
 INSERT INTO early_watch_publications VALUES('restore-snapshot','2026-11-03',2,'{"active":[],"gaps":["source_unavailable"]}');
 INSERT INTO early_watch_history VALUES('restore-snapshot',0,'S1','restore-event','confirmed_not_selected','{"securityId":"S1","status":"confirmed_not_selected"}');
 """)
+connection.executescript("""
+INSERT INTO morning_reports VALUES('restore-snapshot','restore-run','2026-11-03','screen-eval-v1',2,100,3,'restore-morning-hash','{"inputHash":"restore-input-hash","baseline":["S1"],"main":[],"status":"partial"}');
+INSERT INTO morning_cohorts VALUES('restore-snapshot','baseline','S1','restore-input-hash',2);
+INSERT INTO morning_receipts VALUES('restore-snapshot','restore-morning-hash',4,1);
+INSERT INTO review_feedback VALUES('restore-feedback','restore-snapshot',5,'{"id":"restore-feedback","response":"no_response"}');
+INSERT INTO morning_due_events VALUES('2026-11-04',101,'overdue');
+""")
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')

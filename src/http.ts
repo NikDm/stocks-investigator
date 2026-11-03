@@ -1,3 +1,6 @@
+import { dashboard, reportView, assessmentView, page, escape, css } from './morning/view';
+import { evidenceSchema } from './research/assessment';
+import { ReviewFeedback } from './morning/feedback';
 import { ResearchPublisher } from './research/publisher';
 import { Hono } from 'hono';
 import { createRemoteJWKSet, createLocalJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
@@ -9,9 +12,6 @@ import { Screener } from './screening/persistence';
 import { MarketCapture } from './market/capture';
 import { marketCommand, type MarketEnv } from './market/runtime';
 import { syntheticCommand } from './coordinator';
-
-const escape = (value: string) => value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
-const page = (title: string, content: string) => `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escape(title)}</title><body><h1>${escape(title)}</h1>${content}</body></html>`;
 
 export type Env = MarketEnv & {
   DB: D1Database;
@@ -30,7 +30,8 @@ const accessConfig = z.object({
 });
 const keySets = new Map<string, JWTVerifyGetKey>();
 
-export function createApp(options: { keySet?: JWTVerifyGetKey } = {}) {
+export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => number } = {}) {
+  const clock = options.clock ?? Date.now;
   const app = new Hono<{ Bindings: Env; Variables: { identity: string } }>();
   app.use('*', async (c, next) => {
     c.header('Cache-Control', 'no-store');
@@ -100,14 +101,40 @@ export function createApp(options: { keySet?: JWTVerifyGetKey } = {}) {
     const watch = await capture.foundation.db.prepare('SELECT value FROM early_watch_publications WHERE snapshot_id=?').bind(snapshot.id).first<{ value: string }>();
     return c.json({ snapshot, screening: await new Screener(capture).result(snapshot.id,offset), research: await new ResearchPublisher(capture.foundation).publication(snapshot.id), earlyWatch: watch ? JSON.parse(watch.value) : null, coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
   });
-  app.get('/', async (c) => {
-    const store = new Foundation(c.env.DB);
-    const runs = await store.status(), reports = await store.reports();
-    return c.html(page('Investment Intelligence', `<p>Foundation with synthetic records. Morning discovery is not operational.</p>
-      <p>Jobs: ${c.env.JOBS_ENABLED === 'true' ? 'enabled' : 'disabled'}. Manual commands wait up to five minutes for the next scheduled tick.</p>
-      <h2>Reports</h2><ul>${reports.map((r) => `<li><a href="/reports/${encodeURIComponent(r.id)}">${escape(r.id)}</a> — cutoff ${escape(new Date(r.cutoff).toISOString())}</li>`).join('')}</ul>
-      <h2>Run status</h2><pre>${escape(JSON.stringify(runs, null, 2))}</pre>`));
+  app.get('/dashboard.css', c => c.body(css,200,{ 'Content-Type': 'text/css; charset=utf-8' }));
+  app.get('/', async c => c.html(await dashboard(new Foundation(c.env.DB),clock(),c.env.JOBS_ENABLED==='true')));
+  app.get('/morning/:id', async c => {
+    const html = await reportView(new Foundation(c.env.DB),c.req.param('id'),clock(),await csrfToken(c.env.CSRF_SECRET,c.get('identity')));
+    return html ? c.html(html) : c.text('Morning report unavailable',404);
   });
+  app.get('/assessments/:id',async c => {
+    const assessment = await new ResearchPublisher(new Foundation(c.env.DB)).version(c.req.param('id'));
+    return assessment ? c.html(assessmentView(assessment,clock())) : c.text('Assessment unavailable',404);
+  });
+  app.get('/evidence/:id',async c => {
+    const row = await c.env.DB.prepare('SELECT value FROM research_evidence WHERE id=?').bind(c.req.param('id')).first<{ value: string }>();
+    if (!row) return c.text('Evidence unavailable',404);
+    const evidence = evidenceSchema.parse(JSON.parse(row.value));
+    return c.html(page('Evidence',`<a href="/">Dashboard</a><p><a href="${escape(/^https?:\/\//.test(evidence.url) ? evidence.url : '#')}">Original source</a></p><p>Published: ${evidence.publishedAt===null ? 'unknown' : new Date(evidence.publishedAt).toISOString()}; acquired: ${new Date(evidence.acquiredAt).toISOString()}.</p><blockquote>${escape(evidence.text)}</blockquote><p>Sanitized excerpt only; full replay unavailable.</p>`));
+  });
+  app.use('/morning/*/feedback',bodyLimit({ maxSize: 8192, onError: c => c.text('Request too large',413) }));
+  const feedback = async (c: import('hono').Context<{ Bindings: Env; Variables: { identity: string } }>, form: boolean) => {
+    if (c.req.header('origin')!==c.env.APP_ORIGIN) return c.text('Forbidden',403);
+    let raw: unknown, token = c.req.header('x-csrf-token') ?? '';
+    try {
+      if (form) {
+        const fields = await c.req.parseBody(); token = String(fields.csrf ?? '');
+        raw = Object.fromEntries(Object.entries(fields).filter(([key,value]) => key!=='csrf' && value!=='').map(([key,value]) =>
+          [key,key==='minutes' ? Number(value) : ['understanding','effort','decision'].includes(key) ? value==='true' ? true : value==='false' ? false : value : value]));
+      } else raw = await c.req.json();
+    } catch { return c.text('Invalid feedback',400); }
+    if (!await validCsrf(c.env.CSRF_SECRET,c.get('identity'),token)) return c.text('Forbidden',403);
+    try { await new ReviewFeedback(new Foundation(c.env.DB),clock).record(c.req.param('id')!,raw); }
+    catch (error) { return c.json({ error: error instanceof Conflict ? 'feedback_conflict' : 'invalid_feedback' },error instanceof Conflict ? 409 : 400); }
+    return form ? c.redirect(`/morning/${encodeURIComponent(c.req.param('id')!) }#feedback`,303) : c.json({ saved: true },201);
+  };
+  app.post('/api/morning/:id/feedback',c => feedback(c,false));
+  app.post('/morning/:id/feedback',c => feedback(c,true));
   app.get('/reports/:id', async (c) => {
     const offset = Number(c.req.query('offset') ?? 0);
     if (!Number.isSafeInteger(offset) || offset < 0) return c.text('Invalid page', 400);

@@ -1,3 +1,5 @@
+import { MorningReports } from '../morning/publication';
+import { morningStatus } from '../morning/schedule';
 import { ResearchRuntime, RESEARCH_STAGE_CPU_RESERVATION_MS, type ResearchEnv } from '../research/runtime';
 import { Screener, SCREENING_STAGE_CPU_RESERVATION_MS } from '../screening/persistence';
 import { z } from 'zod';
@@ -34,7 +36,7 @@ async function planHistory(capture: MarketCapture, lease: Lease, id: string, off
   const known = (await capture.foundation.db.prepare(`SELECT security_id,basis,GROUP_CONCAT(DISTINCT session) AS sessions FROM market_sightings
     WHERE snapshot_id=? AND security_id IN (SELECT json_extract(value,'$.securityId') FROM json_each(?)) AND kind='daily' GROUP BY security_id,basis`)
     .bind(id,JSON.stringify(identities)).all<{ security_id: string; basis: string; sessions: string }>()).results;
-  if (identities.length) await capture.plan(lease,id,[{ id: `history:actions:${offset}`, kind: 'actions', basis: 'raw', start: first, end: snapshot.reportDate, securities: identities, ...(seed ? {} : { deadline: snapshot.deadline }) }]);
+  if (identities.length) await capture.plan(lease,id,[{ id: `history:actions:${offset}`, kind: 'actions', basis: 'raw', start: first, end: snapshot.reportDate, securities: identities, ...(seed ? {} : { deadline: Math.min(snapshot.deadline,instant(snapshot.reportDate,'07:45','Europe/Zagreb')) }) }]);
   const groups = new Map<string, Identity[]>();
   for (const identity of identities) for (const basis of ['raw','split']) {
     const sessions = new Set(known.find(r => r.security_id === identity.securityId && r.basis === basis)?.sessions.split(',') ?? []);
@@ -46,7 +48,7 @@ async function planHistory(capture: MarketCapture, lease: Lease, id: string, off
   for (const [key,securities] of groups) {
     const [basis,start] = key.split(':');
     await capture.plan(lease,id,[{ id: `history:${offset}:${key}`, kind: 'bars', basis: basis === 'split' ? 'split' : 'raw', start: start!, end: snapshot.expectedSession,
-      securities, ...(seed ? {} : { deadline: snapshot.deadline }) }]);
+      securities, ...(seed ? {} : { deadline: Math.min(snapshot.deadline,instant(snapshot.reportDate,'07:45','Europe/Zagreb')) }) }]);
   }
   return snapshot.decisions.length;
 }
@@ -56,8 +58,8 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
   const capture = new MarketCapture(store,clock);
   try {
     const command = marketCommand.parse(JSON.parse(candidate.payload));
-    const http = new MarketHttp(store,lease,credentials(env),clock,fetcher,command.seed);
-    const bootstrap = new MarketBootstrap(capture,http,clock);
+    const http = () => new MarketHttp(store,lease,credentials(env),clock,fetcher,command.seed);
+    let bootstrap: MarketBootstrap | undefined;
     await store.fenced(lease,clock(),[db.prepare('INSERT INTO market_run_state(run_id) VALUES(?) ON CONFLICT DO NOTHING').bind(lease.runId)]);
     let research: ResearchRuntime | undefined;
     let queriesRemaining = 850, cpuRemainingMs = 16000; // Leave 4 seconds for coordinator/serialization overhead.
@@ -72,15 +74,19 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
         screening: SCREENING_STAGE_CPU_RESERVATION_MS, research: RESEARCH_STAGE_CPU_RESERVATION_MS, evaluation: 6000, finish: 1000 } as Record<string,number>)[phase] ?? 1000;
       if (queriesRemaining < queryReserve || cpuRemainingMs < cpuReserveMs) break;
       queriesRemaining -= queryReserve; cpuRemainingMs -= cpuReserveMs;
+      if (!await store.beginAttempt(lease,clock())) break;
       if (phase === 'bootstrap') {
+        bootstrap ??= new MarketBootstrap(capture,http(),clock);
         const done = await bootstrap.step(lease,{ reportDate: command.reportDate, calendarFrom: shiftDate(command.reportDate,-150), calendarThrough: shiftDate(command.reportDate,75), mappingVersion: `mapping:${lease.runId}` },8);
         if (!done) {
           const failed = await db.prepare('SELECT name FROM market_bootstrap_retries WHERE run_id=? AND attempts>=3 LIMIT 1').bind(lease.runId).first();
           if (failed) await finish(store,lease,{ status: 'unavailable', reason: 'catalogue_or_mapping_failed' },clock);
+          else await store.fenced(lease,clock(),[db.prepare('UPDATE runs SET attempts=0 WHERE id=?').bind(lease.runId)]);
           break;
         }
         phase = 'resolve';
       } else if (phase === 'resolve') {
+        bootstrap ??= new MarketBootstrap(capture,http(),clock);
         const result = await bootstrap.result(lease.runId); if (!result) throw new Error('incomplete_bootstrap');
         if (!result.calendar.some(s => s.date === command.reportDate)) { await finish(store,lease,{ status: 'no_report', reason: 'exchange_closed' },clock); break; }
         await capture.begin(lease,{ id: lease.runId, reportDate: command.reportDate, ...result,
@@ -90,10 +96,15 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
         const count = await planHistory(capture,lease,lease.runId,cursor,command.seed); cursor += count;
         if (count < 100) { phase = 'acquire'; cursor = 0; }
       } else if (phase === 'acquire') {
-        const result = await new MarketWorker(capture,new AlpacaSource(http,`mapping:${lease.runId}`),clock).tick(lease,lease.runId,4);
-        const pending = await db.prepare("SELECT COUNT(*) AS total FROM market_tasks WHERE snapshot_id=? AND state='pending'").bind(lease.runId).first<{ total: number }>();
-        if (pending!.total === 0) phase = 'qualify';
-        else if (!result.committed) break;
+        if (!command.seed && clock()>=instant(command.reportDate,'07:45','Europe/Zagreb')) {
+          await store.fenced(lease,clock(),[db.prepare("UPDATE market_tasks SET state='failed',reason='morning_acquisition_closed' WHERE snapshot_id=? AND state='pending' AND id LIKE 'history:%'").bind(lease.runId)]);
+          phase = 'qualify';
+        } else {
+          const result = await new MarketWorker(capture,new AlpacaSource(http(),`mapping:${lease.runId}`),clock).tick(lease,lease.runId,4);
+          const pending = await db.prepare("SELECT COUNT(*) AS total FROM market_tasks WHERE snapshot_id=? AND state='pending'").bind(lease.runId).first<{ total: number }>();
+          if (pending!.total === 0) phase = 'qualify';
+          else if (!result.committed) { await store.fenced(lease,clock(),[db.prepare('UPDATE runs SET attempts=0 WHERE id=?').bind(lease.runId)]); break; }
+        }
       } else if (phase === 'qualify') {
         if (await capture.finalize(lease,lease.runId)) phase = 'screening';
       } else if (phase === 'screening') {
@@ -106,12 +117,17 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
         await planEvaluation(capture,lease,lease.runId,snapshot.expectedSession); phase = 'finish';
       } else {
         const snapshot = (await capture.snapshot(lease.runId))!;
+        if (!command.seed) {
+          const reports = new MorningReports(store,clock);
+          await reports.publish(lease,lease.runId);
+          await reports.certify(lease,lease.runId);
+        }
         await finish(store,lease,{ status: snapshot.status, snapshotId: lease.runId, reportDate: command.reportDate, expectedSession: snapshot.expectedSession, researchOnly: 'true' },clock); break;
       }
-      await store.fenced(lease,clock(),[db.prepare('UPDATE market_run_state SET phase=?,cursor=? WHERE run_id=?').bind(phase,cursor,lease.runId)]);
+      await store.fenced(lease,clock(),[db.prepare('UPDATE market_run_state SET phase=?,cursor=? WHERE run_id=?').bind(phase,cursor,lease.runId),db.prepare('UPDATE runs SET attempts=0 WHERE id=?').bind(lease.runId)]);
     }
   } catch {
-    await store.fail(lease,clock(),{ permanent: true });
+    await store.fail(lease,clock());
   } finally { await store.release(lease,clock()); }
 }
 
@@ -148,7 +164,11 @@ export async function drainCollections(store: Foundation, env: MarketEnv, candid
 export async function enqueueMarket(store: Foundation, clock: () => number = Date.now) {
   const now = clock(), date = localDate(now,'Europe/Zagreb');
   const start = instant(date,'06:30','Europe/Zagreb'), end = instant(date,'08:00','Europe/Zagreb');
-  if (now >= start && now < end) await store.enqueue(`market:screen-eval-v1:${date}:morning`,{ kind: 'market', reportDate: date, seed: false },now);
+  const due = await morningStatus(store,now);
+  if (due.session==='open' && now>=end && due.state.startsWith('Overdue')) {
+    await store.db.prepare("INSERT INTO morning_due_events(report_date,at,code) VALUES(?,?,'overdue') ON CONFLICT DO NOTHING").bind(date,now).run();
+  }
+  if (due.session!=='closed' && now >= start && now < end) await store.enqueue(`market:screen-eval-v1:${date}:morning`,{ kind: 'market', reportDate: date, seed: false },now);
   const pending = await store.db.prepare("SELECT id FROM runs WHERE state IN ('queued','running') AND json_extract(payload,'$.kind')='market-collections' LIMIT 1").first();
   if (!pending) await store.enqueue(`market-collections:${Math.floor(now/300000)}`,{ kind: 'market-collections' },now);
 }

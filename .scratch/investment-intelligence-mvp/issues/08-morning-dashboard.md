@@ -1,6 +1,6 @@
 # 08 — Deliver the scheduled morning review in the private dashboard
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 07
 
@@ -34,3 +34,7 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+2026-11-03: Implementation requested via `$implement issue 8`; dependency 07 is resolved for local work. Baseline: `3c4ce7562fbcd835c084b53b11c49beb0419eace`. Awaiting confirmation of the proposed publication, private HTTP and coordinator test seams and review baseline. Production observation/deployment gates remain open.
+
+2026-11-03: User replied “agreed”, confirming the report-publication, private-dashboard HTTP and existing-coordinator TDD seams and baseline `3c4ce7562fbcd835c084b53b11c49beb0419eace`.

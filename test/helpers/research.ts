@@ -4,21 +4,23 @@ import { MarketCapture } from '../../src/market/capture';
 import { Screener } from '../../src/screening/persistence';
 import type { Identity } from '../../src/market/types';
 export const researchNow = Date.parse('2026-11-03T06:30:00Z');
-export async function researchFixture(key: string) {
-  const foundation = new Foundation(env.DB), run = await foundation.enqueue(key,{},researchNow);
-  const lease = (await foundation.claim(run.id,'research',researchNow))!;
+export async function researchFixture(key: string, reportDate = '2026-11-03', useRunId = false) {
+  const fixtureNow = Date.parse(`${reportDate}T06:30:00Z`);
+  const foundation = new Foundation(env.DB), run = await foundation.enqueue(key,{},fixtureNow);
+  if (useRunId) key = run.id;
+  const lease = (await foundation.claim(run.id,'research',fixtureNow))!;
   const calendar = [];
   for (let t=Date.parse('2026-06-01');t<=Date.parse('2026-12-18');t+=86400000) {
-    const d = new Date(t); if (d.getUTCDay()!==0 && d.getUTCDay()!==6) calendar.push({ date: d.toISOString().slice(0,10), open: '09:30', close: '16:00' });
+    const d = new Date(t); if (d.getUTCDay()!==0 && d.getUTCDay()!==6 && d.toISOString().slice(0,10)!=='2026-11-26') calendar.push({ date: d.toISOString().slice(0,10), open: '09:30', close: '16:00' });
   }
   const identities: Identity[] = ['A','B','C','D','E','F','G','H','I'].map(name => ({ brokerTicker: `BROKER_${name}`, isin: name, securityId: name, issuerId: name,
-    symbol: name, asof: '2026-11-03', primaryVenue: 'NYSE', securityType: 'Common Stock', compositeFIGI: name, shareClassFIGI: name,
+    symbol: name, asof: reportDate, primaryVenue: 'NYSE', securityType: 'Common Stock', compositeFIGI: name, shareClassFIGI: name,
     listing: 'verified', comparability: 'verified', verifiedActionIds: [], evidence: ['https://example.com/listing'], actionVersion: 'v1' }));
-  const capture = new MarketCapture(foundation,() => researchNow);
-  await capture.begin(lease,{ id: key, reportDate: '2026-11-03', calendar, calendarFrom: '2026-06-01', calendarThrough: '2026-12-18',
+  const capture = new MarketCapture(foundation,() => fixtureNow);
+  await capture.begin(lease,{ id: key, reportDate, calendar, calendarFrom: '2026-06-01', calendarThrough: '2026-12-18',
     instruments: identities.map(i => ({ ticker: i.brokerTicker, isin: i.isin, type: 'STOCK', currencyCode: 'USD', workingScheduleId: 1 })),
     identities, exchanges: [{ name: 'NYSE', workingSchedules: [{ id: 1 }] }], mappingVersion: 'v1', splitVolumeVerified: true });
-  const dates = calendar.filter(s => s.date<='2026-11-02').slice(-61);
+  const dates = calendar.filter(s => s.date<reportDate).slice(-61);
   for (const identity of identities) {
     await capture.ingest(lease,key,{ task: identity.securityId, page: 0, nextToken: null,
       observations: dates.flatMap((s,i) => (['raw','split'] as const).map(basis => {
@@ -29,7 +31,7 @@ export async function researchFixture(key: string) {
       })) });
   }
   await capture.finalize(lease,key);
-  const screener = new Screener(capture,() => researchNow);
+  const screener = new Screener(capture,() => fixtureNow);
   while (!await screener.step(lease,key)) {}
-  return { foundation, lease, capture, screener };
+  return { foundation, lease, capture, screener, snapshotId: key };
 }

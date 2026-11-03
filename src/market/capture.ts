@@ -229,7 +229,7 @@ export class MarketCapture {
   async finalize(lease: Lease, id: string) {
     const snapshot = await this.snapshot(id,0,0);
     if (!snapshot) throw new Error('snapshot missing');
-    if (snapshot.cutoff !== null) return;
+    if (snapshot.cutoff !== null) return true;
     const cutoff = this.clock();
     const tasks = await this.tasks(id);
     if (tasks.some(t => t.id.startsWith('history:') && t.state === 'pending' && cutoff < snapshot.deadline)) return false;
