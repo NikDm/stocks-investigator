@@ -46,3 +46,5 @@ Wrangler's scheduled testing endpoint is local tooling only: start `npm run dev 
 ## Design and operation
 
 [Operations and deployment](docs/operations.md) describes security bindings, publication, budgets, recovery, deploy/rollback and the outstanding production gates. [Issue 04 evidence](.scratch/investment-intelligence-mvp/issues/04-hosted-foundation.md#answer) records the delivered milestone and limitations. Domain language is in [CONTEXT.md](CONTEXT.md).
+
+Market capture (issue 05) is documented in [the capture runbook](docs/market-capture.md). It is disabled by default and remains research-only; live identity reconciliation, runtime measurements and three observed pre-08:00 sessions are outstanding.

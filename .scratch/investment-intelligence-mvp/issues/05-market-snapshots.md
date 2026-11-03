@@ -1,6 +1,6 @@
 # 05 — Capture broker-eligible market snapshots and calendars
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 04
 
@@ -37,3 +37,5 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+2026-11-03: Implementation requested explicitly via `$implement issue 5`. Dependency 04 is resolved for local work; its deployment gates remain in force. Baseline for implementation/review: `dd239074bd3ef8a9531e14ee7cd1109c76026991`. Proposed market-capture test seam submitted for user confirmation under the TDD skill before new tests.

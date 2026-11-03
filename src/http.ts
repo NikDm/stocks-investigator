@@ -4,12 +4,14 @@ import { z } from 'zod';
 import { bodyLimit } from 'hono/body-limit';
 import { csrfToken, validCsrf } from './csrf';
 import { Conflict, Foundation } from './persistence';
+import { MarketCapture } from './market/capture';
+import { marketCommand, type MarketEnv } from './market/runtime';
 import { syntheticCommand } from './coordinator';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const page = (title: string, content: string) => `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escape(title)}</title><body><h1>${escape(title)}</h1>${content}</body></html>`;
 
-export type Env = {
+export type Env = MarketEnv & {
   DB: D1Database;
   APP_ORIGIN: string;
   ACCESS_ISSUER: string;
@@ -59,7 +61,7 @@ export function createApp(options: { keySet?: JWTVerifyGetKey } = {}) {
   app.get('/api/csrf', async (c) => c.json({ token: await csrfToken(c.env.CSRF_SECRET, c.get('identity')) }));
   app.get('/api/status', async (c) => {
     const store = new Foundation(c.env.DB);
-    return c.json({ jobsEnabled: c.env.JOBS_ENABLED === 'true', runs: await store.status(), storage: await store.metrics(), budgets: await store.budgets() });
+    return c.json({ jobsEnabled: c.env.JOBS_ENABLED === 'true', runs: await store.status(), storage: await store.metrics(), budgets: await store.budgets(), marketEnabled: c.env.MARKET_ENABLED === 'true' });
   });
   app.post('/api/runs', async (c) => {
     if (c.req.header('origin') !== c.env.APP_ORIGIN) return c.text('Forbidden', 403);
@@ -74,6 +76,26 @@ export function createApp(options: { keySet?: JWTVerifyGetKey } = {}) {
       const run = await new Foundation(c.env.DB).enqueue(`manual:${c.get('identity')}:${parsed.data.key}`, { pages: parsed.data.pages }, now);
       return c.json({ run, nextTickDelaySeconds: Math.ceil((300000 - now % 300000) / 1000) }, 202);
     } catch (error) { if (error instanceof Conflict) return c.json({ error: 'idempotency_conflict' }, 409); throw error; }
+  });
+  app.post('/api/market/runs', async c => {
+    if (c.req.header('origin') !== c.env.APP_ORIGIN || !await validCsrf(c.env.CSRF_SECRET,c.get('identity'),c.req.header('x-csrf-token') ?? '')) return c.text('Forbidden',403);
+    if (c.env.JOBS_ENABLED !== 'true' || c.env.MARKET_ENABLED !== 'true') return c.json({ error: 'market_disabled' },503);
+    let body: unknown; try { body = await c.req.json(); } catch { return c.json({ error: 'invalid_command' },400); }
+    const parsed = marketCommand.safeParse(body);
+    if (!parsed.success) return c.json({ error: 'invalid_command' },400);
+    const now = Date.now();
+    try {
+      const run = await new Foundation(c.env.DB).enqueue(`market:screen-eval-v1:${parsed.data.reportDate}:${parsed.data.seed ? 'seed' : 'morning'}`,parsed.data,now);
+      return c.json({ run, nextTickDelaySeconds: Math.ceil((300000-now%300000)/1000) },202);
+    } catch (error) { if (error instanceof Conflict) return c.json({ error: 'idempotency_conflict' },409); throw error; }
+  });
+  app.get('/api/market/snapshots/:id',async c => {
+    const offset = Number(c.req.query('offset') ?? 0);
+    if (!Number.isSafeInteger(offset) || offset < 0) return c.json({ error: 'invalid_offset' },400);
+    const capture = new MarketCapture(new Foundation(c.env.DB));
+    const snapshot = await capture.snapshot(c.req.param('id'),offset);
+    if (!snapshot) return c.json({ error: 'snapshot_unavailable' },404);
+    return c.json({ snapshot, coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
   });
   app.get('/', async (c) => {
     const store = new Foundation(c.env.DB);
