@@ -1,3 +1,5 @@
+import { Refreshes, refreshCommand } from './refresh/store';
+import { refreshControls, refreshView } from './refresh/view';
 import { Tracking, trackingCommand } from './tracking/store';
 import { trackingList, trackingDetail } from './tracking/view';
 import { dashboard, reportView, assessmentView, page, escape, css, sourceHref } from './morning/view';
@@ -107,8 +109,32 @@ export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => num
   app.get('/', async c => c.html(await dashboard(new Foundation(c.env.DB),clock(),c.env.JOBS_ENABLED==='true')));
   app.get('/morning/:id', async c => {
     const html = await reportView(new Foundation(c.env.DB),c.req.param('id'),clock(),await csrfToken(c.env.CSRF_SECRET,c.get('identity')));
-    return html ? c.html(html) : c.text('Morning report unavailable',404);
+    if (!html) return c.text('Morning report unavailable',404);
+    const controls = await refreshControls(new Foundation(c.env.DB),c.req.param('id'),await csrfToken(c.env.CSRF_SECRET,c.get('identity')),clock(),c.env.JOBS_ENABLED==='true' && c.env.MARKET_ENABLED==='true');
+    return c.html(html.replace('</main>',controls+'</main>'));
   });
+  app.get('/refresh/:id',async c => {
+    const html = await refreshView(new Foundation(c.env.DB),c.req.param('id'),clock());
+    return html ? c.html(html) : c.text('Refresh unavailable',404);
+  });
+  app.use('/refresh/commands',bodyLimit({ maxSize: 8192, onError: c => c.text('Request too large',413) }));
+  const refresh = async (c: import('hono').Context<{ Bindings: Env; Variables: { identity: string } }>, form: boolean) => {
+    if (c.req.header('origin')!==c.env.APP_ORIGIN) return c.text('Forbidden',403);
+    let raw: unknown, token = c.req.header('x-csrf-token') ?? '';
+    try {
+      if (form) { const fields = await c.req.parseBody(); token = String(fields.csrf ?? ''); raw = { morningId: fields.morningId, key: fields.key }; }
+      else raw = await c.req.json();
+    } catch { return c.json({ error: 'invalid_refresh_command' },400); }
+    if (!await validCsrf(c.env.CSRF_SECRET,c.get('identity'),token)) return c.text('Forbidden',403);
+    if (c.env.JOBS_ENABLED!=='true' || c.env.MARKET_ENABLED!=='true') return c.json({ error: 'refresh_disabled' },503);
+    const command = refreshCommand.safeParse(raw); if (!command.success) return c.json({ error: 'invalid_refresh_command' },400);
+    try {
+      const result = await new Refreshes(new Foundation(c.env.DB),clock).command(c.get('identity'),command.data);
+      return form ? c.redirect(`/refresh/${encodeURIComponent(result.runId)}`,303) : c.json(result,202);
+    } catch (error) { if (!(error instanceof Conflict)) throw error; return c.json({ error: 'refresh_conflict', message: error.message },409); }
+  };
+  app.post('/api/refresh',c => refresh(c,false));
+  app.post('/refresh/commands',c => refresh(c,true));
   app.get('/assessments/:id',async c => {
     const assessment = await new Tracking(new Foundation(c.env.DB),clock).version(c.req.param('id'));
     return assessment ? c.html(assessmentView(assessment,clock())) : c.text('Assessment unavailable',404);

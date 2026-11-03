@@ -1,6 +1,6 @@
 # 10 — Refresh an opportunity before the US opening on demand
 
-Status: needs-triage
+Status: resolved
 Type: task
 Blocked by: 09
 
@@ -31,3 +31,16 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+
+## Answer
+
+Implemented local authorized queued pre-opening refresh through the user-approved refresh-command/publication seams. Private JSON and CSRF-protected form commands return a durable run ID/next-tick delay, deduplicate concurrent requests, retain command aliases, enforce one active refresh, two accepted runs/session and ten-minute cooldown, and disable requests without enough bounded ticks before cutoff. The frozen deduplicated morning-three/active-tracking scope reuses morning metrics, universe and baseline; no reranking, replacement candidates or trading tools were added.
+
+Checkpointed evidence/issuer/model work and delayed SIP minute observations share scheduled-work budget reservations and the fenced coordinator. Unknown billed calls retain charges and abstain. Publication atomically appends immutable assessment/comparison records, matched cohort manifests and tracked lifecycle updates, then certifies actual primary-readback availability. Only complete results observed strictly before open-minus-five-minutes expose separate evaluated refresh cohorts; equality, late recovery, incomplete work and missing receipts are research-only. Morning artifacts stay unchanged; post-cutoff evidence cannot be backdated. Tracking overlap retains its recorded thesis independently of the morning assessment. Confirmed recorded invalidation immediately persists, without renewing tracking or rewriting the original thesis/history, and the following scheduled check can continue the version chain.
+
+Private views show evidence/attractiveness/invalidation changes, new/prior/morning version links, failed-refresh status, dated raw morning-close versus premarket fractional comparison, observation acquisition/event times, minimum delay and minute volume. Raw comparisons explicitly leave intervening corporate actions unverified. Stale/missing/delayed prices always leave current entry unvalidated and direct the investor to check Trading 212 live.
+
+Validation: **104 tests / 28 files passed**, including eight refresh integration tests; strict typecheck, local migration, dry-run Worker bundle, diff whitespace check and encrypted restore passed. The recovery fixture now includes populated refresh requests, command aliases, pending work, reports, versions, cohorts and receipts. [Independent Standards/Spec review](../refresh-review.md) found three Spec defects and two Standards heuristics; fixes were independently re-reviewed with zero remaining actionable findings. [Runbook](../../../docs/refresh.md) documents commands, conservative time reservations and evaluation-read requirements.
+
+Limitations: hosted combined CPU/heap/query/network throughput and real provider/model delivery/quality remain unmeasured; source registration remains SEC-only and opaque invalidation conditions still need manual interpretation. Existing provider retention/account, cost, private hosting, independent backup/key custody and observed morning-readiness gates remain open. Jobs remain disabled by default. No paid call, deployment, provisioning, provider outreach or trade occurred.

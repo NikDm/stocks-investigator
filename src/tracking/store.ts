@@ -29,7 +29,7 @@ export class Tracking {
       .all<{ action: string; at: number; value: string }>()).results.map(r => ({ ...r, value: JSON.parse(r.value) as Opportunity }));
   }
   async version(id: string): Promise<Assessment | null> {
-    const row = await this.foundation.db.prepare('SELECT value FROM research_assessment_versions WHERE id=? UNION ALL SELECT value FROM tracking_versions WHERE id=?').bind(id,id).first<{ value: string }>();
+    const row = await this.foundation.db.prepare('SELECT value FROM research_assessment_versions WHERE id=? UNION ALL SELECT value FROM tracking_versions WHERE id=? UNION ALL SELECT value FROM refresh_versions WHERE id=?').bind(id,id,id).first<{ value: string }>();
     return row ? JSON.parse(row.value) as Assessment : null;
   }
   async checks(securityId: string): Promise<TrackingCheck[]> {

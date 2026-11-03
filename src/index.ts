@@ -1,4 +1,5 @@
 import { createApp, type Env } from './http';
+import { drainRefresh } from './refresh/runtime';
 import { drain } from './coordinator';
 import { enqueueMarket, drainMarket, drainCollections } from './market/runtime';
 import { Foundation } from './persistence';
@@ -16,6 +17,7 @@ export default {
         if (candidate) {
           const kind = (JSON.parse(candidate.payload) as { kind?: string }).kind;
           if (kind === 'market') await drainMarket(store,env,candidate);
+          else if (kind === 'refresh') await drainRefresh(store,env,candidate);
           else if (kind === 'market-collections') await drainCollections(store,env,candidate);
           else await drain(store);
         }

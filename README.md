@@ -54,3 +54,5 @@ Deterministic screening (issue 06) is documented in [the screening runbook](docs
 Bounded evidence research (issue 07) is documented in [the research runbook](docs/research.md), including shared budget reservations, registered-source safety, immutable assessments and early-watch history. It is disabled by default; live account/model-quality and combined hosted workload gates remain open.
 
 Morning review (issue 08) is documented in [the morning runbook](docs/morning-review.md). Tracked opportunities (issue 09), including the ten-slot cap, explicit renewal/archive, immutable material-change checks and private controls, are documented in [the tracking runbook](docs/tracking.md).
+
+Manual pre-opening re-review (issue 10) is documented in [the refresh runbook](docs/refresh.md), including private queued commands, tracked/morning comparisons, conservative request windows, delayed-price warnings and separate immutable refresh cohorts.

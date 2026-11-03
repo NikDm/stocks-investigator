@@ -71,5 +71,15 @@ INSERT INTO tracking_work VALUES('restore-snapshot','S1',1,'{"pending":"restore-
 INSERT INTO tracking_versions VALUES('restore-tracking-assessment','S1','restore-assessment','restore-snapshot',3,'{"sources":[{"id":"restore-evidence"}]}');
 INSERT INTO tracking_checks VALUES('restore-snapshot','S1',6,'{"status":"incomplete","versionId":"restore-tracking-assessment","gaps":["unknown_billed_call"]}');
 """)
+connection.executescript("""
+INSERT INTO runs(id,command_key,payload,state,next_at,created_at,updated_at) VALUES('restore-refresh-run','restore-refresh','{"kind":"refresh"}','queued',10,10,10);
+INSERT INTO refresh_requests VALUES('restore-refresh-run','restore-snapshot','2026-11-03',10,'{"morningId":"restore-snapshot","inputHash":"restore-input-hash","entries":[{"securityId":"S1"}],"cutoff":100}');
+INSERT INTO refresh_commands VALUES('investor','restore-refresh','restore-snapshot','restore-refresh-run');
+INSERT INTO refresh_work VALUES('restore-refresh-run','S1','{"pending":"restore-model-call","phase":"assess","steps":5}');
+INSERT INTO refresh_reports VALUES('restore-refresh-run',5,6,'restore-refresh-hash','{"inputHash":"restore-input-hash","baseline":["S1"],"main":[],"complete":true,"entries":[{"securityId":"S1","versionId":"restore-refresh-version","assessment":{"sources":[]}}]}');
+INSERT INTO refresh_versions VALUES('restore-refresh-version','restore-refresh-run','S1','restore-tracking-assessment',5,'{"sources":[]}');
+INSERT INTO refresh_cohorts VALUES('restore-refresh-run','baseline','S1','restore-input-hash',5);
+INSERT INTO refresh_receipts VALUES('restore-refresh-run','restore-refresh-hash',7,1);
+""")
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')

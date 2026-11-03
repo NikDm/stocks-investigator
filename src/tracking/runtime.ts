@@ -44,8 +44,8 @@ export class TrackingRuntime {
     return { row, observations };
   }
   private async baseline(versionId: string): Promise<MarketState | null> {
-    const row = await this.store.db.prepare('SELECT snapshot_id,security_id FROM research_assessment_versions WHERE id=? UNION ALL SELECT snapshot_id,security_id FROM tracking_versions WHERE id=?')
-      .bind(versionId,versionId).first<{ snapshot_id: string; security_id: string }>();
+    const row = await this.store.db.prepare('SELECT snapshot_id,security_id FROM research_assessment_versions WHERE id=? UNION ALL SELECT snapshot_id,security_id FROM tracking_versions WHERE id=? UNION ALL SELECT q.morning_id AS snapshot_id,v.security_id FROM refresh_versions v JOIN refresh_requests q ON q.run_id=v.run_id WHERE v.id=?')
+      .bind(versionId,versionId,versionId).first<{ snapshot_id: string; security_id: string }>();
     if (!row) return null;
     const check = await this.store.db.prepare('SELECT value FROM tracking_checks WHERE snapshot_id=? AND security_id=?').bind(row.snapshot_id,row.security_id).first<{ value: string }>();
     if (check) return (JSON.parse(check.value) as TrackingCheck).market;
