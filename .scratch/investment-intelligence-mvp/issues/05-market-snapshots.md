@@ -1,6 +1,6 @@
 # 05 — Capture broker-eligible market snapshots and calendars
 
-Status: claimed
+Status: resolved
 Type: task
 Blocked by: 04
 
@@ -39,3 +39,30 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
 
 2026-11-03: Implementation requested explicitly via `$implement issue 5`. Dependency 04 is resolved for local work; its deployment gates remain in force. Baseline for implementation/review: `dd239074bd3ef8a9531e14ee7cd1109c76026991`. Proposed market-capture test seam submitted for user confirmation under the TDD skill before new tests.
+
+
+## Answer
+
+Local market-capture implementation delivered on 2026-11-03. **Live morning readiness remains unverified; no deployment or paid provisioning occurred.** [Capture runbook](../../../docs/market-capture.md), [independent review and resolutions](../market-capture-review.md).
+
+- User confirmed the proposed provider-response → persisted snapshot/reference/coverage seam under TDD. Red→green tests cover immutable dated universes, nonstandard broker tickers, structural exclusions/ambiguity, exact 61-session raw/split qualification, stale expected sessions, pagination/429 recovery, decimal provenance, DST/holiday/early-close scheduling, primary-venue Q auctions, split revisions, removed members, outage recovery and successor obligations. Provider HTTP fixtures exercise the actual command runtime through persisted manifests.
+- Complete broker/provider catalogues and listed/unlisted ISIN mapping evidence are saved in bounded pages. Reconciled identity/action evidence is dated and append-only; unresolved issuer/type/listing identities remain quarantined. No suffix subset or automatic acceptance of the old audit was introduced. Explicit SIP/as-of/basis/source, mapping/action versions and real acquisition times survive replay. Raw/split values normalize once; snapshots and collection receipts reference them.
+- Durable fenced capture stages, idempotent page checkpoints, per-provider persisted buckets, counted reservations, bounded transport/freshness retries and failed-batch partitioning respect configured limits. Missing successful responses recheck only missing symbols before the deadline. Initial seeds can checkpoint across days instead of raising request ceilings or reducing coverage.
+- Saved U_D members receive after-open official-auction collection and raw-close/action obligations through H30, surviving broker removal. Missing contiguous sessions recover after outages with original per-session deadlines; late inputs remain revisions. Dated rename reviews preserve stable IDs; sourced successor links collect distinct successor IDs and merge inherited holding windows even when the successor already belonged to an older universe. Unknown action consideration, successors, venues or terminal outcomes remain gaps. Future outcome arithmetic stays with 11.
+- Private snapshot/progress API and CSRF-protected command enqueue use the existing Access boundary. Market scheduling is opt-in behind `MARKET_ENABLED=false` by default, and remains research-only. Both IANA zones and an exchange calendar determine previous session, report deadline, opening window and next-report cutoff.
+
+### Verification
+
+Strict typecheck, final **35-test / 6-file full suite**, local migrations 0002–0003, Worker dry-run bundle and encrypted disposable restore all passed. Restore compares every table's row totals/hash, integrity and foreign keys, including actual market observations/receipts, pending pagination/retries, identity/successor evidence and references; tampered ciphertext is rejected. No remote database was touched.
+
+The full audit-scale market harness retained **5,078 securities × 90 sessions × two bases = 914,040 observations**, in **1,829 pages**, and qualified all 5,078 through **102 bounded stages**. Final run: approximately **123.8 seconds** including evaluation planning; maximum measured capture/qualification stage **157 ms**, maximum normalized page **154,001 bytes**, whole-universe evaluation planning **4,845 ms** with 51 auction batches. The unchanged foundation harness also retained its 457,020 inputs. Initial scale checks exposed unindexed full-history scans; indexed batch/security/kind lookups fixed them without shrinking the universe.
+
+The final complete local test process tree measured **128.372 s wall**, **130.624 s user CPU**, **32.175 s system CPU**, and **702,624 KiB peak resident memory**. These include test/framework/native SQLite work across the full suite. They are **not** Worker JS heap measurements, billed per-invocation CPU, remote D1 throughput, provider timing, or proof of the 128 MiB production heap limit. Real hosted combined-workload measurements remain an operational gate.
+
+Review reported three Spec correctness findings (freshness recovery, intermediate-session recovery and existing-successor window extension) and one Standards judgment call (parallel collection-state maps). All were fixed, regression-tested and confirmed resolved independently.
+
+### Open operational gates
+
+The required **three observed US report sessions before 08:00 Europe/Zagreb have not occurred**. Do not claim punctual delivery from fixtures, a session-date timestamp, or this local benchmark. Record actual starts/completions/retrievals, expected sessions, full-symbol coverage/reasons, SIP/basis/action versions, retries and pagination when operational access/time permits. DST mismatch, holidays and early closes have fixture coverage only.
+
+Current real issuer/listing/action reconciliation, provider quotas/access, full hosted CPU/heap/query/deadline behavior and the foundation's deployment/billing/private-access/independent-backup/key-custody gates remain unverified. The runbook documents configuration, bounded recovery, request/storage monitoring and explicit partial/unavailable behavior. No provider credentials were accessed for live acquisition, and no values were backdated. Local implementation acceptance is separate from those live gates, as this ticket permits.

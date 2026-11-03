@@ -29,12 +29,13 @@ export const observationSchema = z.object({
   source: z.literal('alpaca').default('alpaca'), securityId: z.string().min(1), kind: z.enum(['daily','opening','action']), symbol: z.string(), asof: dateSchema,
   feed: z.enum(['sip','not_applicable']), basis: z.enum(['raw','split']), eventAt: z.number().int().nonnegative(), session: dateSchema,
   actionVersion: z.string(), mappingVersion: z.string(), value: z.record(z.string(), z.json()),
-}).refine(o => o.feed === (o.kind === 'action' ? 'not_applicable' : 'sip'), 'incorrect feed for observation kind');
+}).refine(o => o.feed === (o.kind === 'action' ? 'not_applicable' : 'sip') && (o.kind === 'daily' || o.basis === 'raw'), 'incorrect feed for observation kind');
 export type Observation = z.infer<typeof observationSchema>;
 export type SavedObservation = Observation & { id: string; acquiredAt: number; revisionOf: string | null };
 export const requestSchema = z.object({
   id: z.string().min(1).max(100), kind: z.enum(['bars','auctions','actions']), basis: z.enum(['raw','split']),
   start: dateSchema, end: dateSchema, securities: z.array(identitySchema).min(1).max(100),
+  freshnessAttempt: z.number().int().min(1).max(3).optional(), initialDeadlines: z.array(z.object({ session: dateSchema, cutoff: z.number().int().nonnegative() })).optional(), purpose: z.enum(['initial','revision']).optional(),
   notBefore: z.number().int().nonnegative().default(0), deadline: z.number().int().nonnegative().optional(),
 });
 export type MarketRequest = z.infer<typeof requestSchema>;

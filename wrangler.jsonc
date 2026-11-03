@@ -17,7 +17,8 @@
     "APP_ORIGIN": "http://127.0.0.1:8787",
     "ACCESS_ISSUER": "https://configure-your-team.cloudflareaccess.com",
     "ACCESS_AUDIENCE": "configure-before-use",
-    "JOBS_ENABLED": "false"
+    "JOBS_ENABLED": "false",
+    "MARKET_ENABLED": "false"
   },
   "observability": { "enabled": false }
 }

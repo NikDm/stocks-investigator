@@ -2,6 +2,7 @@ import { env } from 'cloudflare:test';
 import { expect, it } from 'vitest';
 import { Foundation } from '../src/persistence';
 import { MarketCapture } from '../src/market/capture';
+import { planEvaluation } from '../src/market/evaluation';
 import type { Identity, Observation } from '../src/market/types';
 
 it('retains the complete audit-scale raw/split seed and qualifies it in bounded SQL stages', async () => {
@@ -43,10 +44,16 @@ it('retains the complete audit-scale raw/split seed and qualifies it in bounded 
   }
   expect(await capture.coverage(run.id)).toEqual([{ reason: 'eligible', total: 5078 }]);
   expect((await capture.stats()).observations).toBe(914040);
+  const planningStarted = clock();
+  await store.renew(lease,clock());
+  await planEvaluation(capture,lease,run.id,'2026-11-03');
+  const planningMs = clock()-planningStarted;
+  expect((await capture.tasks(run.id)).filter(t => t.request.kind === 'auctions')).toHaveLength(51);
+  expect(planningMs).toBeLessThan(45000);
   expect(maxPageBytes).toBeLessThan(256*1024);
   expect(maxStageMs).toBeLessThan(45000);
   expect((await capture.snapshot(run.id,5000))?.decisions).toHaveLength(78);
   console.info(JSON.stringify({ benchmark: 'local-market-capture', securities: 5078, observations: 914040, pages: number, qualificationStages: stages,
-    elapsedMs: clock()-start, maxStageMs, maxPageBytes }));
+    elapsedMs: clock()-start, maxStageMs, maxPageBytes, planningMs }));
   await store.release(lease,clock());
 }, 300000);

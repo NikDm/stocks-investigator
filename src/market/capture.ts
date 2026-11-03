@@ -1,6 +1,6 @@
 import { Foundation, hash, type Lease } from '../persistence';
 import { z } from 'zod';
-import { validBar, liquid, compare } from './quality';
+import { validBar, liquid, compare, officialOpening, openingTime } from './quality';
 import { instant, schedule } from './calendar';
 import { beginSchema, type Begin, type Decision, type Snapshot, observationSchema, type SavedObservation, requestSchema, type MarketRequest, type Task, type Identity } from './types';
 
@@ -75,8 +75,36 @@ export class MarketCapture {
     if (!committed) return false;
     const { nextToken } = JSON.parse(committed.value) as { nextToken: string | null };
     if (nextToken !== null && nextToken === task.token) throw new Error('repeated pagination token');
+    if (nextToken === null) await this.planFreshnessCheck(lease,id,task);
     await this.foundation.fenced(lease, this.clock(), [this.sql("UPDATE market_tasks SET token=?,page=page+1,attempts=0,state=?,reason=NULL WHERE snapshot_id=? AND id=? AND page=?", nextToken, nextToken === null ? 'complete' : 'pending', id, task.id, task.page)]);
     return true;
+  }
+  private async planFreshnessCheck(lease: Lease,id: string,task: Task) {
+    if (task.request.kind === 'actions' || (task.request.freshnessAttempt ?? 1) >= 3) return;
+    const snapshot = (await this.snapshot(id,0,0))!;
+    const deadline = task.request.deadline ?? snapshot.deadline;
+    const retryAt = this.clock() + (task.request.kind === 'auctions' ? 5 : 1)*60000;
+    if (retryAt >= deadline) return;
+    const kind = task.request.kind === 'bars' ? 'daily' : 'opening';
+    const rows = (await this.sql(`SELECT p.security_id,o.value FROM market_sightings p JOIN market_observations o ON o.id=p.input_id
+      WHERE p.snapshot_id=? AND p.kind=? AND p.session=? AND p.basis=? AND p.security_id IN (SELECT json_extract(value,'$.securityId') FROM json_each(?))`,id,kind,task.request.end,task.request.basis,JSON.stringify(task.request.securities))
+      .all<{ security_id: string; value: string }>()).results;
+    const day = snapshot.calendar.find(s => s.date === task.request.end);
+    const open = day ? instant(day.date,day.open,'America/New_York') : null;
+    const missing = task.request.securities.filter(identity => {
+      if (kind === 'opening' && !venues[identity.primaryVenue]) return false;
+      return !rows.some(row => {
+        if (row.security_id !== identity.securityId) return false;
+        if (kind === 'daily') return true;
+        const o = JSON.parse(row.value) as SavedObservation;
+        return open !== null && officialOpening(o,venues[identity.primaryVenue]!,open);
+      });
+    });
+    if (!missing.length) return;
+    const nextId = `${task.id}:fresh`;
+    if (await this.sql('SELECT id FROM market_tasks WHERE snapshot_id=? AND id=?',id,nextId).first()) return;
+    await this.plan(lease,id,[{ ...task.request, id: nextId, start: task.request.end, securities: missing, notBefore: retryAt,
+      freshnessAttempt: (task.request.freshnessAttempt ?? 1)+1, deadline }]);
   }
   async taskAttempt(lease: Lease, id: string, task: Task) {
     await this.foundation.fenced(lease, this.clock(), [
@@ -166,22 +194,20 @@ export class MarketCapture {
     const identity = (await this.decision(snapshotId, securityId))?.identity;
     const day = snapshot?.calendar.find(s => s.date === session);
     const venue = identity && venues[identity.primaryVenue];
-    const empty = (status: string) => ({ status, price: null as string | null, eventAt: null as number | null, inputIds: [] as string[], qualifyingReceipts: 0, cutoff });
+    const empty = (status: string) => ({ status, price: null as string | null, eventAt: null as number | null, eventTimestamp: null as string | null, inputIds: [] as string[], qualifyingReceipts: 0, cutoff });
     if (!day || !identity || !venue) return empty('unknown_primary_venue');
     const open = instant(session, day.open, 'America/New_York');
     const rows = (await this.sql(`SELECT o.id,o.value,p.acquired_at,p.occurrences FROM market_sightings p
       JOIN market_observations o ON o.id=p.input_id WHERE p.snapshot_id=? AND p.security_id=? AND p.kind='opening' AND p.session=? AND p.acquired_at<=?`,
     snapshotId, securityId, session, cutoff).all<{ id: string; value: string; acquired_at: number; occurrences: number }>()).results;
-    const qualifying = rows.map(r => ({ id: r.id, occurrences: r.occurrences, o: JSON.parse(r.value) as SavedObservation })).filter(({ o }) =>
-      o.value['x'] === venue && o.value['c'] === 'Q' && o.eventAt >= open && o.eventAt <= open + 30 * 60000
-      && typeof o.value['p'] === 'string' && /^(0|[1-9]\d*)(\.\d+)?$/.test(o.value['p']) && compare(o.value['p'],'0') > 0);
+    const qualifying = rows.map(r => ({ id: r.id, occurrences: r.occurrences, o: JSON.parse(r.value) as SavedObservation })).filter(({ o }) => officialOpening(o,venue,open));
     if (!qualifying.length) return empty('missing_reference');
     const price = qualifying[0]!.o.value['p'] as string;
     const conflict = qualifying.some(r => compare(r.o.value['p'] as string,price) !== 0);
-    const sorted = qualifying.sort((a,b) => a.o.eventAt - b.o.eventAt);
+    const sorted = qualifying.sort((a,b) => openingTime(a.o)!<openingTime(b.o)! ? -1 : openingTime(a.o)!>openingTime(b.o)! ? 1 : 0);
     return { ...empty(conflict ? 'conflict' : 'available'),
       price: conflict ? null : sorted[0]!.o.value['p'] as string,
-      eventAt: conflict ? null : sorted[0]!.o.eventAt,
+      eventAt: conflict ? null : sorted[0]!.o.eventAt, eventTimestamp: conflict ? null : sorted[0]!.o.value['t'] as string,
       inputIds: [...new Set(sorted.map(r => r.id))], qualifyingReceipts: qualifying.reduce((n,r) => n+r.occurrences,0) };
   }
   async freezeReference(lease: Lease, id: string, securityId: string, session: string, kind: 'initial' | 'revision' = 'initial') {

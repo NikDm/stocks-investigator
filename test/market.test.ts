@@ -85,7 +85,7 @@ it('deduplicates normalized history and freezes the exact 61-session qualificati
   await expect(capture.ingest(lease, 'history', { ...page, page: 1, observations: history().slice(0,1) })).rejects.toThrow('frozen');
 });
 
-it('exposes missing expected-session data and preserves the original inputs after a split correction', async () => {
+it('exposes a missing expected session without borrowing observations from another capture', async () => {
   const { capture, lease } = await started('partial');
   await capture.ingest(lease, 'partial', { task: 'seed', page: 0, observations: history().filter(o => o.session !== '2026-11-02'), nextToken: null });
   await capture.finalize(lease, 'partial');
@@ -138,7 +138,7 @@ it('resumes a failed pagination request without duplicating the committed page a
   expect((await capture.observations(identity.securityId)).filter(o => o.basis === 'raw' && o.kind === 'daily')).toHaveLength(90);
 });
 
-it('captures explicit SIP/as-of/split pages from read-only provider HTTP and rejects unknown symbol aliases', async () => {
+it('captures explicit SIP/as-of/split pages from read-only provider HTTP with exact decimal values', async () => {
   const { capture, lease } = await started('http-provider');
   const { AlpacaSource, MarketHttp } = await import('../src/market/provider');
   const foundation = capture.foundation;
@@ -204,7 +204,7 @@ it('keeps raw-close and action collection obligations for saved members after br
   await capture.ingest(lease,'saved-universe',{ task: 'seed', page: 0, observations: history(), nextToken: null });
   await capture.finalize(lease,'saved-universe');
   const { planEvaluation } = await import('../src/market/evaluation');
-  await planEvaluation(capture,lease,'saved-universe','2026-11-02');
+  await planEvaluation(capture,lease,'saved-universe','2026-11-03');
   const tasks = await capture.tasks('saved-universe');
   expect(tasks.some(t => t.request.kind === 'auctions' && t.request.notBefore === Date.parse('2026-11-03T15:15:00Z'))).toBe(true);
   expect(tasks.some(t => t.id.startsWith('outcome:') && t.request.kind === 'bars' && t.request.basis === 'raw' && t.request.securities[0]?.securityId === identity.securityId)).toBe(true);
@@ -212,7 +212,7 @@ it('keeps raw-close and action collection obligations for saved members after br
   await capture.begin(lease,{ id: 'after-removal', reportDate: '2026-11-03', calendar: seedCalendar(), calendarFrom: '2026-06-26', calendarThrough: '2026-12-18',
     instruments: [{ ...instrument, ticker: 'UNRELATED_ETF', type: 'ETF' }], exchanges: [{ name: 'NYSE', workingSchedules: [{ id: 1 }] }], identities: [], mappingVersion: 'after-removal' });
   await capture.finalize(lease,'after-removal');
-  await planEvaluation(capture,lease,'after-removal','2026-11-02');
+  await planEvaluation(capture,lease,'after-removal','2026-11-03');
   expect((await capture.tasks('after-removal')).some(t => t.request.kind === 'bars' && t.request.securities.some(s => s.securityId === identity.securityId))).toBe(true);
   expect((await capture.snapshot('saved-universe'))?.decisions[0]?.reason).toBe('eligible');
 });
@@ -261,4 +261,64 @@ it('appends split-adjustment revisions without duplicating raw history or changi
   expect((await capture.stats()).observations-before).toBe(90);
   expect((await capture.snapshot('split-original'))?.decisions).toEqual(original.decisions);
   expect((await capture.snapshot('split-revised'))?.decisions[0]?.reason).toBe('eligible');
+});
+
+it('rechecks symbols whose successful response lacks the expected session before the deadline', async () => {
+  const { capture, lease } = await started('freshness-recovery');
+  await capture.plan(lease,'freshness-recovery',[{ id: 'history:raw', kind: 'bars', basis: 'raw', start: '2026-11-02', end: '2026-11-02', securities: [identity], deadline: now+3600000 }]);
+  const { MarketWorker } = await import('../src/market/worker');
+  let at = now, calls = 0;
+  const worker = new MarketWorker(capture,{ page: async () => ({ observations: ++calls === 1 ? [] : history().filter(o => o.session === '2026-11-02' && o.basis === 'raw'), nextToken: null }) },() => at);
+  await worker.tick(lease,'freshness-recovery',1);
+  expect((await capture.tasks('freshness-recovery')).some(t => t.state === 'pending' && t.next_at > now)).toBe(true);
+  at += 60000;
+  await worker.tick(lease,'freshness-recovery',1);
+  expect(calls).toBe(2);
+});
+
+it('plans missing intermediate closes after an outage with their original per-session deadlines', async () => {
+  const { capture, lease } = await started('outage-recovery');
+  await capture.ingest(lease,'outage-recovery',{ task: 'seed', page: 0, observations: history(), nextToken: null });
+  await capture.finalize(lease,'outage-recovery');
+  const { planEvaluation } = await import('../src/market/evaluation');
+  await planEvaluation(capture,lease,'outage-recovery','2026-11-05');
+  const request = (await capture.tasks('outage-recovery')).find(t => t.id.startsWith('outcome:close:'))?.request;
+  expect(request?.start).toBe('2026-11-03');
+  expect(request?.end).toBe('2026-11-05');
+  expect(request?.initialDeadlines).toEqual([
+    { session: '2026-11-03', cutoff: Date.parse('2026-11-04T07:00:00Z') },
+    { session: '2026-11-04', cutoff: Date.parse('2026-11-05T07:00:00Z') },
+    { session: '2026-11-05', cutoff: Date.parse('2026-11-06T07:00:00Z') },
+  ]);
+});
+
+it('collects a removed member’s dated successor without changing the original security identity', async () => {
+  const { capture, lease } = await started('successor');
+  await capture.ingest(lease,'successor',{ task: 'seed', page: 0, observations: history(), nextToken: null });
+  await capture.finalize(lease,'successor');
+  const successor: Identity = { ...identity, securityId: 'successor-security', compositeFIGI: 'successor-security', symbol: 'NEW', brokerTicker: 'NEW', isin: 'successor-isin' };
+  await env.DB.prepare('INSERT INTO market_identity_reviews(id,isin,valid_from,valid_through,acquired_at,value) VALUES(?,?,?,?,?,?)')
+    .bind('successor-review',successor.isin,'2026-11-01','2026-12-31',now,JSON.stringify(successor)).run();
+  await env.DB.prepare('INSERT INTO market_successor_links(id,parent_id,successor_id,effective_session,acquired_at,action_id,evidence) VALUES(?,?,?,?,?,?,?)')
+    .bind('successor-link',identity.securityId,successor.securityId,'2026-11-03',now,'verified-merger','["https://example.com/merger"]' ).run();
+  const { planEvaluation } = await import('../src/market/evaluation');
+  await planEvaluation(capture,lease,'successor','2026-11-05');
+  expect((await capture.tasks('successor')).some(t => t.request.kind === 'bars' && t.request.securities.some(s => s.securityId === successor.securityId && s.symbol === 'NEW'))).toBe(true);
+  expect((await capture.snapshot('successor'))?.decisions[0]?.identity?.securityId).toBe(identity.securityId);
+});
+
+it('extends a successor’s existing collection windows through the parent’s later H30', async () => {
+  const { capture, lease } = await started('successor-overlap');
+  await capture.ingest(lease,'successor-overlap',{ task: 'seed', page: 0, observations: history(), nextToken: null });
+  await capture.finalize(lease,'successor-overlap');
+  const successor: Identity = { ...identity, securityId: 'overlap-successor', compositeFIGI: 'overlap-successor', symbol: 'NEXT', brokerTicker: 'NEXT', isin: 'overlap-isin', asof: '2026-10-06' };
+  await capture.begin(lease,{ id: 'older-successor', reportDate: successor.asof, calendar: seedCalendar(), calendarFrom: '2026-06-26', calendarThrough: '2026-12-18',
+    instruments: [{ ...instrument, ticker: successor.brokerTicker, isin: successor.isin }], exchanges: [{ name: 'NYSE', workingSchedules: [{ id: 1 }] }], identities: [successor], mappingVersion: 'older' });
+  await capture.ingest(lease,'older-successor',{ task: 'seed', page: 0, observations: history().map(o => ({ ...o, securityId: successor.securityId, symbol: successor.symbol, asof: successor.asof, mappingVersion: 'older' })), nextToken: null });
+  await capture.finalize(lease,'older-successor');
+  await env.DB.prepare('INSERT INTO market_successor_links(id,parent_id,successor_id,effective_session,acquired_at,action_id,evidence) VALUES(?,?,?,?,?,?,?)')
+    .bind('overlap-link',identity.securityId,successor.securityId,'2026-11-03',now,'verified-overlap','["https://example.com/merger"]' ).run();
+  const { planEvaluation } = await import('../src/market/evaluation');
+  await planEvaluation(capture,lease,'successor-overlap','2026-11-18');
+  expect((await capture.tasks('successor-overlap')).some(t => t.request.kind === 'bars' && t.request.end === '2026-11-18' && t.request.securities.some(s => s.securityId === successor.securityId))).toBe(true);
 });

@@ -25,3 +25,18 @@ export function liquid(raw: SavedObservation[]) {
   const a = dollars[9]!, b = dollars[10]!;
   return a.n * b.d + b.n * a.d >= 10000000n * a.d * b.d ? 'eligible' : 'below_liquidity';
 }
+
+export function openingTime(o: SavedObservation): bigint | null {
+  const t = o.value['t'];
+  if (typeof t !== 'string') return null;
+  const match = t.match(/T\d{2}:\d{2}:\d{2}(?:\.(\d{1,9}))?(?:Z|[+-]\d{2}:\d{2})$/);
+  const milliseconds = Date.parse(t);
+  if (!match || !Number.isFinite(milliseconds)) return null;
+  return BigInt(milliseconds)*1000000n + BigInt((match[1] ?? '').padEnd(9,'0').slice(3));
+}
+export function officialOpening(o: SavedObservation, venue: string, open: number) {
+  const time = openingTime(o), price = o.value['p'];
+  return o.feed==='sip' && o.basis==='raw' && o.value['x']===venue && o.value['c']==='Q'
+    && time!==null && time>=BigInt(open)*1000000n && time<=BigInt(open+30*60000)*1000000n
+    && typeof price==='string' && /^(0|[1-9]\d*)(\.\d+)?$/.test(price) && compare(price,'0')>0;
+}
