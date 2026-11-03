@@ -1,4 +1,4 @@
-import { Screener } from '../screening/persistence';
+import { Screener, SCREENING_STAGE_CPU_RESERVATION_MS } from '../screening/persistence';
 import { z } from 'zod';
 import { Foundation, type Lease, type Run } from '../persistence';
 import { MarketCapture } from './capture';
@@ -58,14 +58,18 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
     const http = new MarketHttp(store,lease,credentials(env),clock,fetcher,command.seed);
     const bootstrap = new MarketBootstrap(capture,http,clock);
     await store.fenced(lease,clock(),[db.prepare('INSERT INTO market_run_state(run_id) VALUES(?) ON CONFLICT DO NOTHING').bind(lease.runId)]);
-    let queriesRemaining = 850;
+    let queriesRemaining = 850, cpuRemainingMs = 16000; // Leave 4 seconds for coordinator/serialization overhead.
     for (let stage = 0; stage < 32 && clock() - started < 195000; stage++) {
       await store.renew(lease,clock());
       const state = (await db.prepare('SELECT phase,cursor FROM market_run_state WHERE run_id=?').bind(lease.runId).first<{ phase: string; cursor: number }>())!;
       let phase = state.phase, cursor = state.cursor;
       const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, screening: 65, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
-      if (queriesRemaining < queryReserve) break;
-      queriesRemaining -= queryReserve;
+      // Reserve CPU work across all phases, including multiple screening partitions.
+      // Wall time includes provider waits, so it cannot measure CPU; allowances are conservative local bounds.
+      const cpuReserveMs = ({ bootstrap: 5000, resolve: 5000, plan: 1000, acquire: 4000, qualify: 1000,
+        screening: SCREENING_STAGE_CPU_RESERVATION_MS, evaluation: 6000, finish: 1000 } as Record<string,number>)[phase] ?? 1000;
+      if (queriesRemaining < queryReserve || cpuRemainingMs < cpuReserveMs) break;
+      queriesRemaining -= queryReserve; cpuRemainingMs -= cpuReserveMs;
       if (phase === 'bootstrap') {
         const done = await bootstrap.step(lease,{ reportDate: command.reportDate, calendarFrom: shiftDate(command.reportDate,-150), calendarThrough: shiftDate(command.reportDate,75), mappingVersion: `mapping:${lease.runId}` },8);
         if (!done) {

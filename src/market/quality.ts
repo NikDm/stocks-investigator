@@ -1,5 +1,5 @@
 import { D, rounded, median } from '../decimal';
-import { barSchema, type SavedObservation } from './types';
+import { barSchema, type Bar, type SavedObservation } from './types';
 // Exact base-10 quantities; eligibility never rounds through binary money.
 function quantity(text: string): [bigint, bigint] {
   const [whole, fraction = ''] = text.split('.');
@@ -16,14 +16,15 @@ export function validBar(value: unknown) {
   return [b.o,b.h,b.l,b.c,b.v].every(n => compare(n,'0') > 0)
     && compare(b.l,b.o) <= 0 && compare(b.l,b.c) <= 0 && compare(b.h,b.o) >= 0 && compare(b.h,b.c) >= 0;
 }
+export function liquidity(raw: Bar[]) {
+  const rawClose = new D(raw.at(-1)!.c);
+  const medianDollarVolume = median(raw.slice(-20).map(bar => new D(bar.c).mul(bar.v)));
+  const reason = new D(rounded(rawClose)).lt(5) ? 'below_price'
+    : new D(rounded(medianDollarVolume)).lt(5000000) ? 'below_liquidity' : 'eligible';
+  return { rawClose, medianDollarVolume, reason };
+}
 export function liquid(raw: SavedObservation[]) {
-  const latest = barSchema.parse(raw.at(-1)!.value);
-  if (new D(rounded(new D(latest.c))).lt(5)) return 'below_price';
-  const dollars = median(raw.slice(-20).map(row => {
-    const bar = barSchema.parse(row.value);
-    return new D(bar.c).mul(bar.v);
-  }));
-  return new D(rounded(dollars)).gte(5000000) ? 'eligible' : 'below_liquidity';
+  return liquidity(raw.map(row => barSchema.parse(row.value))).reason;
 }
 
 export function openingTime(o: SavedObservation): bigint | null {

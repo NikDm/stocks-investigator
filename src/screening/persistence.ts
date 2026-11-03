@@ -3,6 +3,8 @@ import { MarketCapture } from '../market/capture';
 import type { Decision, SavedObservation } from '../market/types';
 import { checkVersion, measure, rank, type ScreenResult, type ScreenRow } from './screen';
 
+// Conservative local benchmark allowance; hosted CPU validation remains an operational gate.
+export const SCREENING_STAGE_CPU_RESERVATION_MS = 1500;
 type Summary = Omit<ScreenResult,'rows' | 'universe'> & { universeCount: number; rowCount: number; inputHash: string; completedAt: number };
 export class Screener {
   constructor(readonly capture: MarketCapture, readonly clock: () => number = Date.now) {}
@@ -18,10 +20,12 @@ export class Screener {
       WHERE d.snapshot_id=? AND m.ticker IS NULL ORDER BY d.ticker LIMIT ?`,snapshotId,partitionSize).all<{ value: string }>()).results.map(r => JSON.parse(r.value) as Decision);
     if (decisions.length) {
       const ids = [...new Set(decisions.flatMap(d => d.inputIds))];
-      // Fetch exact frozen versions, including their original acquisition times; no latest-history query.
-      const saved = ids.length ? (await this.sql(`SELECT o.id,o.value,o.acquired_at,o.revision_of FROM market_observations o
-        JOIN json_each(?) j ON o.id=j.value`,JSON.stringify(ids)).all<{ id: string; value: string; acquired_at: number; revision_of: string | null }>()).results : [];
-      const observations = saved.map(r => ({ ...JSON.parse(r.value), id: r.id, acquiredAt: r.acquired_at, revisionOf: r.revision_of } as SavedObservation));
+      // Fetch exact frozen content and this snapshot’s acquisition/action provenance.
+      // Normalized content can predate the query/action version that acquired it for this snapshot.
+      const saved = ids.length ? (await this.sql(`SELECT o.id,o.value,MAX(p.acquired_at) AS acquired_at,p.action_version,o.revision_of FROM market_observations o
+        JOIN json_each(?) j ON o.id=j.value JOIN market_sightings p ON p.input_id=o.id
+        WHERE p.snapshot_id=? AND p.acquired_at<=? GROUP BY o.id`,JSON.stringify(ids),snapshotId,manifest.cutoff!).all<{ id: string; value: string; acquired_at: number; action_version: string; revision_of: string | null }>()).results : [];
+      const observations = saved.map(r => ({ ...JSON.parse(r.value), id: r.id, acquiredAt: r.acquired_at, actionVersion: r.action_version, revisionOf: r.revision_of } as SavedObservation));
       const rows = measure({ manifest: { ...manifest, decisions }, observations, splitVolumeVerified: manifest.splitVolumeVerified === true });
       const writes = [];
       for (const row of rows) {

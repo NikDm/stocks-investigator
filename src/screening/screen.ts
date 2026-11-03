@@ -1,16 +1,20 @@
 import type Decimal from 'decimal.js';
 import { D, rounded, mean, median } from '../decimal';
-import { validBar } from '../market/quality';
+import { validBar, liquidity } from '../market/quality';
 import { barSchema, type Decision, type SavedObservation, type Snapshot } from '../market/types';
 
 export type ScreeningInput = { manifest: Snapshot; observations: SavedObservation[]; splitVolumeVerified: boolean };
 export type Metrics = { latestClose: string; rawClose: string; medianDollarVolume: string; r5: string; r20: string; r20Calculation: string; r60: string;
   sma20: string; sma60: string; positiveDays: number; positiveLogSum: string; largestPositiveLog: string; logConcentration: string | null;
   volumeRatio: string | null; rs20: string | null };
+export type MomentumGate = 'r20' | 'r60' | 'r5' | 'moving_averages' | 'positive_days' | 'log_concentration' | 'relative_strength' | 'volume_confirmation';
+export type Disposition = 'excluded' | 'momentum_gate_failure' | 'duplicate_issuer' | 'research_queue' | 'outside_research_cap' | 'run_unavailable';
+export type MarketConfirmation = 'ineligible' | 'unconfirmed' | 'promotable' | 'confirmed_not_selected' | 'unavailable';
+export type ScreenStatus = 'complete' | 'partial' | 'unavailable';
 export type ScreenRow = { ticker: string; securityId: string | null; identity: Decision['identity']; inputIds: string[];
   exclusion: string | null; metrics: Metrics | null; acquiredThrough: number | null; eventThrough: number | null;
-  failedGates: string[]; rank: number | null; disposition: string; marketConfirmation: string };
-export type ScreenResult = { snapshotId: string; ruleVersion: string; cutoff: number; expectedSession: string; status: string;
+  failedGates: MomentumGate[]; rank: number | null; disposition: Disposition; marketConfirmation: MarketConfirmation };
+export type ScreenResult = { snapshotId: string; ruleVersion: string; cutoff: number; expectedSession: string; status: ScreenStatus;
   universe: string[]; medianR20: string | null; rows: ScreenRow[]; baseline: string[]; researchQueue: string[] };
 const lexical = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 export function checkVersion(manifest: Snapshot, version: string) {
@@ -46,10 +50,8 @@ export function measure(input: ScreeningInput): ScreenRow[] {
     if (bars.some(o => !validBar(o.value))) { row.exclusion = 'invalid_bar'; return row; }
     const raw = rawGroups.map(group => barSchema.parse(group[0]!.value)), split = splitGroups.map(group => barSchema.parse(group[0]!.value));
     const closes = split.map(b => new D(b.c)), latest = closes[60]!;
-    const dollars = median(raw.slice(-20).map(b => new D(b.c).mul(b.v)));
-    const rawClose = new D(raw[60]!.c);
-    if (new D(rounded(rawClose)).lt(5)) { row.exclusion = 'below_price'; return row; }
-    if (new D(rounded(dollars)).lt(5000000)) { row.exclusion = 'below_liquidity'; return row; }
+    const { rawClose, medianDollarVolume: dollars, reason } = liquidity(raw);
+    if (reason !== 'eligible') { row.exclusion = reason; return row; }
     const logs: Decimal[] = [];
     for (let i = 41; i <= 60; i++) if (closes[i]!.gt(closes[i - 1]!)) logs.push(closes[i]!.div(closes[i - 1]!).ln());
     const sum = logs.reduce((sum, value) => sum.plus(value),new D(0)), largest = logs.length ? D.max(...logs) : new D(0);
@@ -73,12 +75,13 @@ export function rank(manifest: Snapshot, measured: ScreenRow[], version: string)
   for (const row of eligible) {
     const m = row.metrics!;
     m.rs20 = rounded(new D(m.r20Calculation).minus(medianValue!));
-    row.failedGates = [
-      ...new D(m.r20).gte('0.05') ? [] : ['r20'], ...new D(m.r60).gte('0.10') ? [] : ['r60'], ...new D(m.r5).gt(0) ? [] : ['r5'],
-      ...new D(m.latestClose).gt(m.sma20) && new D(m.sma20).gt(m.sma60) ? [] : ['moving_averages'],
-      ...m.positiveDays >= 12 ? [] : ['positive_days'], ...m.logConcentration !== null && new D(m.logConcentration).lte('0.50') ? [] : ['log_concentration'],
-      ...new D(m.rs20).gt(0) ? [] : ['relative_strength'], ...m.volumeRatio !== null && new D(m.volumeRatio).gte('1.20') ? [] : ['volume_confirmation'],
+    const gates: [MomentumGate, boolean][] = [
+      ['r20', new D(m.r20).gte('0.05')], ['r60', new D(m.r60).gte('0.10')], ['r5', new D(m.r5).gt(0)],
+      ['moving_averages', new D(m.latestClose).gt(m.sma20) && new D(m.sma20).gt(m.sma60)],
+      ['positive_days', m.positiveDays >= 12], ['log_concentration', m.logConcentration !== null && new D(m.logConcentration).lte('0.50')],
+      ['relative_strength', new D(m.rs20).gt(0)], ['volume_confirmation', m.volumeRatio !== null && new D(m.volumeRatio).gte('1.20')],
     ];
+    row.failedGates = gates.filter(([,passes]) => !passes).map(([gate]) => gate);
     row.disposition = 'momentum_gate_failure'; row.marketConfirmation = 'unconfirmed';
   }
   const passers = eligible.filter(row => !row.failedGates.length).sort((a,b) => {

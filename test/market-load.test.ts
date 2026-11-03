@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test';
 import { expect, it } from 'vitest';
-import { Screener } from '../src/screening/persistence';
+import { Screener, SCREENING_STAGE_CPU_RESERVATION_MS } from '../src/screening/persistence';
 import { Foundation } from '../src/persistence';
 import { MarketCapture } from '../src/market/capture';
 import { planEvaluation } from '../src/market/evaluation';
@@ -48,22 +48,26 @@ it('retains the complete audit-scale raw/split seed and qualifies it in bounded 
   expect(await capture.coverage(run.id)).toEqual([{ reason: 'eligible', total: 5078 }]);
   expect((await capture.stats()).observations).toBe(914040);
   const screener = new Screener(capture,clock), screeningStarted = clock();
+  const screeningDurations: number[] = [];
   let screeningStages = 0, maxScreeningStageMs = 0, rankingMs = 0;
   while (true) {
     await store.renew(lease,clock());
     const stageStarted = clock(), done = await screener.step(lease,run.id,'screen-eval-v1',50);
     const elapsed = clock()-stageStarted;
     screeningStages++; maxScreeningStageMs = Math.max(maxScreeningStageMs,elapsed);
-    expect(elapsed).toBeLessThan(20000);
+    screeningDurations.push(elapsed);
+    expect(elapsed).toBeLessThan(SCREENING_STAGE_CPU_RESERVATION_MS);
     if (done) { rankingMs = elapsed; break; }
   }
+  const combinedPartitionsMs = screeningDurations.sort((a,b) => b-a).slice(0,10).reduce((sum,elapsed) => sum+elapsed,0);
+  expect(combinedPartitionsMs).toBeLessThan(15000);
   const screened = (await screener.result(run.id,0,1))!;
   expect(screened.universeCount).toBe(5078);
   expect(screened.baseline).toEqual(['S0','S1','S10']);
   expect(await screener.step(lease,run.id,'screen-eval-v1',7)).toBe(true);
   expect((await screener.result(run.id,0,1))!.inputHash).toBe(screened.inputHash);
   await context.annotate(JSON.stringify({ benchmark: 'local-screening', securities: 5078, screeningStages,
-    screeningMs: clock()-screeningStarted, maxScreeningStageMs, rankingMs }),'benchmark');
+    screeningMs: clock()-screeningStarted, maxScreeningStageMs, rankingMs, combinedPartitionsMs }),'benchmark');
   const planningStarted = clock();
   await store.renew(lease,clock());
   await planEvaluation(capture,lease,run.id,'2026-11-03');

@@ -1,3 +1,4 @@
+CREATE INDEX market_sighting_input ON market_sightings(snapshot_id,input_id,acquired_at);
 CREATE TABLE screening_metrics (
  snapshot_id TEXT NOT NULL REFERENCES market_snapshots(id), ticker TEXT NOT NULL,
  fingerprint TEXT NOT NULL, value TEXT NOT NULL CHECK(json_valid(value)),
