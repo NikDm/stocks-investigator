@@ -1,3 +1,5 @@
+import { Tracking, trackingCommand } from './tracking/store';
+import { trackingList, trackingDetail } from './tracking/view';
 import { dashboard, reportView, assessmentView, page, escape, css, sourceHref } from './morning/view';
 import { evidenceSchema } from './research/assessment';
 import { ReviewFeedback } from './morning/feedback';
@@ -108,9 +110,38 @@ export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => num
     return html ? c.html(html) : c.text('Morning report unavailable',404);
   });
   app.get('/assessments/:id',async c => {
-    const assessment = await new ResearchPublisher(new Foundation(c.env.DB)).version(c.req.param('id'));
+    const assessment = await new Tracking(new Foundation(c.env.DB),clock).version(c.req.param('id'));
     return assessment ? c.html(assessmentView(assessment,clock())) : c.text('Assessment unavailable',404);
   });
+  app.get('/tracking',async c => c.html(await trackingList(new Tracking(new Foundation(c.env.DB),clock),clock())));
+  app.get('/tracking/:id',async c => {
+    const html = await trackingDetail(new Tracking(new Foundation(c.env.DB),clock),c.req.param('id'),clock(),await csrfToken(c.env.CSRF_SECRET,c.get('identity')));
+    return html ? c.html(html) : c.text('Opportunity unavailable',404);
+  });
+  app.use('/tracking/commands',bodyLimit({ maxSize: 8192, onError: c => c.text('Request too large',413) }));
+  const track = async (c: import('hono').Context<{ Bindings: Env; Variables: { identity: string } }>, form: boolean) => {
+    if (c.req.header('origin')!==c.env.APP_ORIGIN) return c.text('Forbidden',403);
+    let raw: unknown, token = c.req.header('x-csrf-token') ?? '';
+    try {
+      if (form) {
+        const fields = await c.req.parseBody(); token = String(fields.csrf ?? '');
+        raw = Object.fromEntries(Object.entries(fields).filter(([key]) => key!=='csrf').map(([key,value]) => [key,key==='expectedRevision' ? Number(value) : value]));
+      } else raw = await c.req.json();
+    } catch { return c.json({ error: 'invalid_tracking_command' },400); }
+    if (!await validCsrf(c.env.CSRF_SECRET,c.get('identity'),token)) return c.text('Forbidden',403);
+    const parsed = trackingCommand.safeParse(raw);
+    if (!parsed.success) return c.json({ error: 'invalid_tracking_command' },400);
+    try {
+      const result = await new Tracking(new Foundation(c.env.DB),clock).command(c.get('identity'),parsed.data);
+      return form ? c.redirect(`/tracking/${encodeURIComponent(result.securityId)}`,303) : c.json(result,201);
+    } catch (error) {
+      if (!(error instanceof Conflict)) throw error;
+      return form ? c.html(page('Tracking command conflict','<p>The opportunity or capacity changed, or the assessment/calendar is not current. Reload the opportunity and retry with its current revision.</p><a href="/tracking">Tracked opportunities</a>'),409)
+        : c.json({ error: 'tracking_conflict', message: error.message },409);
+    }
+  };
+  app.post('/api/tracking',c => track(c,false));
+  app.post('/tracking/commands',c => track(c,true));
   app.get('/evidence/:id',async c => {
     const row = await c.env.DB.prepare('SELECT value FROM research_evidence WHERE id=?').bind(c.req.param('id')).first<{ value: string }>();
     if (!row) return c.text('Evidence unavailable',404);

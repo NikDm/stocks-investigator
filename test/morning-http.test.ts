@@ -6,7 +6,7 @@ import { planEvaluation } from '../src/market/evaluation';
 import { authenticated } from './auth';
 import { createApp } from '../src/http';
 
-it('offers a private dated morning review with explicit gaps, disabled tracking and CSRF-protected optional feedback', async () => {
+it('offers a private dated morning review with explicit gaps, tracking navigation and CSRF-protected optional feedback', async () => {
   const id = 'morning:http';
   const { foundation, lease, capture } = await researchFixture(id);
   try {
@@ -23,7 +23,7 @@ it('offers a private dated morning review with explicit gaps, disabled tracking 
     const html = await (await request('/morning/morning%3Ahttp')).text();
     expect(html).toContain('No main candidates');
     expect(html).toContain('model_unavailable');
-    expect(html).toContain('Tracking becomes available in issue 09');
+    expect(html).toContain('Tracked opportunities and daily changes');
     expect(html).toContain('0 responses / 1 eligible reports');
     const csrf = await (await request('/api/csrf')).json() as { token: string };
     const body = JSON.stringify({ id: 'review-http', response: 'responded', minutes: 12, usefulness: 'useful', understanding: true, effort: true, decision: false, note: '<script>hello</script>' });

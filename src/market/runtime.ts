@@ -1,3 +1,5 @@
+import { TrackingRuntime } from '../tracking/runtime';
+import { Tracking } from '../tracking/store';
 import { MorningReports } from '../morning/publication';
 import { morningStatus } from '../morning/schedule';
 import { ResearchRuntime, RESEARCH_STAGE_CPU_RESERVATION_MS, type ResearchEnv } from '../research/runtime';
@@ -67,11 +69,11 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
       await store.renew(lease,clock());
       const state = (await db.prepare('SELECT phase,cursor FROM market_run_state WHERE run_id=?').bind(lease.runId).first<{ phase: string; cursor: number }>())!;
       let phase = state.phase, cursor = state.cursor;
-      const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, screening: 65, research: 100, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
+      const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, screening: 65, research: 100, tracking: 100, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
       // Reserve CPU work across all phases, including multiple screening partitions.
       // Wall time includes provider waits, so it cannot measure CPU; allowances are conservative local bounds.
       const cpuReserveMs = ({ bootstrap: 5000, resolve: 5000, plan: 1000, acquire: 4000, qualify: 1000,
-        screening: SCREENING_STAGE_CPU_RESERVATION_MS, research: RESEARCH_STAGE_CPU_RESERVATION_MS, evaluation: 6000, finish: 1000 } as Record<string,number>)[phase] ?? 1000;
+        screening: SCREENING_STAGE_CPU_RESERVATION_MS, research: RESEARCH_STAGE_CPU_RESERVATION_MS, tracking: RESEARCH_STAGE_CPU_RESERVATION_MS, evaluation: 6000, finish: 1000 } as Record<string,number>)[phase] ?? 1000;
       if (queriesRemaining < queryReserve || cpuRemainingMs < cpuReserveMs) break;
       queriesRemaining -= queryReserve; cpuRemainingMs -= cpuReserveMs;
       if (!await store.beginAttempt(lease,clock())) break;
@@ -111,7 +113,11 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
         if (await new Screener(capture,clock).step(lease,lease.runId)) phase = command.seed ? 'evaluation' : 'research';
       } else if (phase === 'research') {
         research ??= await ResearchRuntime.create(store,lease,env,clock,fetcher);
-        if (await research.step(lease,lease.runId,Math.min(started+195000,clock()+35000))) phase = 'evaluation';
+        if (await research.step(lease,lease.runId,Math.min(started+195000,clock()+35000))) phase = 'tracking';
+      } else if (phase === 'tracking') {
+        research ??= await ResearchRuntime.create(store,lease,env,clock,fetcher);
+        const tracking = new TrackingRuntime(new Tracking(store,clock),research.researcher.tools,research.researcher.model,research.intake.mappings,clock);
+        if (await tracking.step(lease,lease.runId,Math.min(started+195000,clock()+35000))) phase = 'evaluation';
       } else if (phase === 'evaluation') {
         const snapshot = (await capture.snapshot(lease.runId))!;
         await planEvaluation(capture,lease,lease.runId,snapshot.expectedSession); phase = 'finish';
@@ -162,6 +168,7 @@ export async function drainCollections(store: Foundation, env: MarketEnv, candid
   finally { await store.release(lease,clock()); }
 }
 export async function enqueueMarket(store: Foundation, clock: () => number = Date.now) {
+  await new Tracking(store,clock).checkpoints();
   const now = clock(), date = localDate(now,'Europe/Zagreb');
   const start = instant(date,'06:30','Europe/Zagreb'), end = instant(date,'08:00','Europe/Zagreb');
   const due = await morningStatus(store,now);

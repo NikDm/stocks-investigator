@@ -64,5 +64,12 @@ INSERT INTO morning_receipts VALUES('restore-snapshot','restore-morning-hash',4,
 INSERT INTO review_feedback VALUES('restore-feedback','restore-snapshot',5,'{"id":"restore-feedback","response":"no_response"}');
 INSERT INTO morning_due_events VALUES('2026-11-04',101,'overdue');
 """)
+connection.executescript("""
+INSERT INTO tracking_events VALUES('investor','restore-select','request-hash','S1',1,5,'select','{"securityId":"S1","revision":1,"status":"active","versionId":"restore-assessment"}');
+INSERT INTO tracking_plans VALUES('restore-snapshot','{"entries":[{"securityId":"S1"}]}');
+INSERT INTO tracking_work VALUES('restore-snapshot','S1',1,'{"pending":"restore-model-call","phase":"assess"}');
+INSERT INTO tracking_versions VALUES('restore-tracking-assessment','S1','restore-assessment','restore-snapshot',3,'{"sources":[{"id":"restore-evidence"}]}');
+INSERT INTO tracking_checks VALUES('restore-snapshot','S1',6,'{"status":"incomplete","versionId":"restore-tracking-assessment","gaps":["unknown_billed_call"]}');
+""")
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')

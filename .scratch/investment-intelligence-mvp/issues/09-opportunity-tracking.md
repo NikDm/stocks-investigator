@@ -1,6 +1,6 @@
 # 09 — Track selected opportunities and publish material changes
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 08
 
@@ -31,3 +31,7 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+2026-11-03: Implementation requested via `$implement issue 9`; dependency 08 is resolved for local work. Claimed at baseline `997aaf7a68f5565b63bc8d9643fc83cd3b9beaef`. Awaiting confirmation of authorized tracking-command, scheduled tracking-check/coordinator and private dashboard HTTP TDD seams and review baseline before writing tests.
+
+2026-11-03: User approved the authorized tracking-command, scheduled tracking-check/coordinator and private dashboard HTTP TDD seams and review baseline `997aaf7a68f5565b63bc8d9643fc83cd3b9beaef`.

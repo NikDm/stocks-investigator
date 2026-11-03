@@ -1,3 +1,4 @@
+import type { TrackingCheck } from '../tracking/runtime';
 import { Foundation, hash, type Lease } from '../persistence';
 import { MarketCapture } from '../market/capture';
 import { Screener } from '../screening/persistence';
@@ -10,7 +11,7 @@ export type MorningValue = {
   snapshot: Omit<Snapshot,'decisions'>; universe: { snapshotId: string; count: number }; inputHash: string;
   baseline: string[]; main: string[]; decisions: PublishedDecision[]; watch: WatchPublication;
   securities: Pick<Identity,'securityId' | 'symbol' | 'brokerTicker' | 'asof' | 'primaryVenue'>[];
-  novelty: Novelty[]; status: 'complete' | 'partial' | 'empty' | 'unavailable'; gaps: string[];
+  novelty: Novelty[]; trackingChecks?: TrackingCheck[]; status: 'complete' | 'partial' | 'empty' | 'unavailable'; gaps: string[];
 };
 type Row = { id: string; run_id: string; report_date: string; rule_version: string; cutoff: number; deadline: number; artifact_at: number; hash: string; value: string };
 export class MorningReports {
@@ -71,12 +72,13 @@ export class MorningReports {
       novelty.push({ securityId, kind: prior ? 'repeat' : promoted ? 'promoted/new' : 'new', previousDate: prior?.report_date ?? null,
         changes, previousVersion: prior ? (JSON.parse(prior.value) as PublishedDecision).versionId : null });
     }
-    const gaps = [...watch.gaps,...research.decisions.flatMap(d => d.gap ? [d.gap] : [])];
-    const status = snapshot.status==='unavailable' ? 'unavailable' : snapshot.status==='partial' || research.status==='partial' || watch.status==='partial' ? 'partial'
-      : research.main.length===0 && watch.active.length===0 ? 'empty' : 'complete';
+    const trackingChecks = (await db.prepare('SELECT value FROM tracking_checks WHERE snapshot_id=? ORDER BY security_id').bind(snapshotId).all<{ value: string }>()).results.map(r => JSON.parse(r.value) as TrackingCheck);
+    const gaps = [...trackingChecks.flatMap(c => c.gaps.map(g => `tracking:${c.securityId}:${g}`)),...watch.gaps,...research.decisions.flatMap(d => d.gap ? [d.gap] : [])];
+    const status = snapshot.status==='unavailable' ? 'unavailable' : snapshot.status==='partial' || research.status==='partial' || watch.status==='partial' || trackingChecks.some(c => c.status==='incomplete') ? 'partial'
+      : research.main.length===0 && watch.active.length===0 && trackingChecks.length===0 ? 'empty' : 'complete';
     const { decisions: _decisions,...manifest } = snapshot;
     const value: MorningValue = { snapshot: manifest, universe: { snapshotId, count: universe!.count }, inputHash: screening.inputHash,
-      securities, baseline: research.baseline, main: research.main, decisions: research.decisions, watch, novelty, status, gaps: [...new Set(gaps)] };
+      trackingChecks, securities, baseline: research.baseline, main: research.main, decisions: research.decisions, watch, novelty, status, gaps: [...new Set(gaps)] };
     const encoded = JSON.stringify(value), digest = await hash(encoded);
     await this.foundation.fenced(lease,now,[
       db.prepare('INSERT INTO morning_reports(id,run_id,report_date,rule_version,cutoff,deadline,artifact_at,hash,value) VALUES(?,?,?,?,?,?,?,?,?)')

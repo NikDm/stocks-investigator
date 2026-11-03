@@ -8,6 +8,10 @@ export const evidenceSchema = z.object({
   revisionOf: z.string().nullable(), scheduledEventAt: z.number().int().nonnegative().nullable().optional(), replayGap: z.literal('sanitized_excerpt_only').optional(), text: z.string().max(32768), retention: z.literal('public_document'),
 }).strict();
 export type Evidence = z.infer<typeof evidenceSchema>;
+export const invalidationPredicate = z.discriminatedUnion('kind',[
+  z.object({ kind: z.literal('close_below'), metric: z.enum(['sma20','latestClose']) }).strict(),
+  z.object({ kind: z.literal('source_text'), originId: z.string().min(1).max(200), contains: text }).strict(),
+]);
 const temporal = z.enum(['time_sensitive','background']).optional();
 const cited = z.object({ text, evidenceIds: z.array(z.string()).max(6), metricKeys: z.array(z.enum(['sma20','latestClose'])).max(2).optional(), temporal }).strict()
   .refine(c => c.evidenceIds.length || c.metricKeys?.length,'citation or deterministic metric required');
@@ -17,7 +21,7 @@ export const proposalSchema = z.object({
   validity: z.discriminatedUnion('kind',[z.object({ kind: z.literal('next_report') }).strict(),z.object({ kind: z.literal('before_open') }).strict(),z.object({ kind: z.literal('before_event'), evidenceId: z.string() }).strict()]).optional(),
   facts: z.array(z.object({ evidenceId: z.string(), quote: text, role: z.enum(['support','contradict','context']), temporal }).strict()).max(12),
   interpretations: z.array(cited).max(6), unknowns: z.array(text).max(12),
-  thesis: cited.nullable(), invalidation: z.array(cited).max(6), horizonSessions: z.literal(20),
+  thesis: cited.nullable(), invalidation: z.array(cited.safeExtend({ predicate: invalidationPredicate.optional() })).max(6), horizonSessions: z.literal(20),
   attractiveness: z.enum(['conditional','unattractive','undetermined']), priceCondition: z.enum(['none','sma20','latest_close']),
 }).strict();
 export type Proposal = z.infer<typeof proposalSchema>;
@@ -45,6 +49,11 @@ export function validateAssessment(raw: unknown, context: AssessmentContext) {
     if (/\b(price target|target price|buy at|sell at|stop.loss)\b|[$€£]/i.test(claim.text)) throw new Error('unsupported price target');
     const sourceText = claim.evidenceIds.map(id => byId.get(id)!.text).join(' ')+' '+(claim.metricKeys ?? []).map(key => context.metrics[key]).join(' ');
     for (const number of claim.text.match(/\d+(?:\.\d+)?/g) ?? []) if (!sourceText.includes(number)) throw new Error('unsupported numeric claim');
+  }
+  for (const condition of proposal.invalidation) {
+    const predicate = condition.predicate;
+    if (predicate?.kind==='close_below' && (!condition.metricKeys?.includes(predicate.metric) || !/below/i.test(condition.text))) throw new Error('price invalidation requires its cited deterministic method');
+    if (predicate?.kind==='source_text' && !condition.evidenceIds.some(id => byId.get(id)?.originId===predicate.originId)) throw new Error('source predicate requires a cited origin');
   }
   const reasonedSupport = proposal.facts.some(f => f.role==='support' && proposal.interpretations.some(c => c.evidenceIds.includes(f.evidenceId)));
   const thesisKind = proposal.thesisKind ?? (reasonedSupport ? 'supported' : proposal.outcome==='accepted' ? 'unexplained' : 'undetermined');
