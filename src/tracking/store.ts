@@ -75,7 +75,10 @@ export class Tracking {
       if (command.action==='renew' && (!current || current.status==='archived' || now<current.checkpointAt)) throw new Conflict('renewal not due');
       const a = await this.version(command.versionId);
       if (!a || a.securityId!==command.securityId || a.cutoff>now || a.expiresAt<=now || a.outcome!=='accepted') throw new Conflict('current assessment required');
-      if (current?.invalidatedAt!==null && current?.invalidatedAt!==undefined && a.cutoff<=current.invalidatedAt) throw new Conflict('current assessment requires revised reasoning');
+      if (current?.invalidatedAt!==null && current?.invalidatedAt!==undefined) {
+        const recorded = await this.version(current.thesisVersionId);
+        if (a.cutoff<=current.invalidatedAt || !recorded || a.thesis?.text===recorded.thesis?.text) throw new Conflict('current assessment requires revised reasoning');
+      }
       const snapshot = await this.calendar();
       if (localDate(a.marketAsOf,'America/New_York')!==snapshot.expectedSession) throw new Conflict('current assessment market session required');
       // A fresh, dated broker identity is required for a new manual selection.

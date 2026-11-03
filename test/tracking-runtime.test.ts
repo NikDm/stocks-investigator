@@ -73,7 +73,8 @@ it('runs tracking inside the scheduled coordinator and publishes its checks with
   const at = Date.parse('2026-12-02T06:30:00Z');
   const publisher = new ResearchPublisher(f.foundation,() => at);
   await publisher.begin(f.lease,f.snapshotId,{ cutoff: at+60000, expiresAt: at+86400000 });
-  const p = await publisher.publish(f.lease,f.snapshotId,['A','B','C'].map(securityId => ({ securityId, kind: 'assessed', proposal: momentumThesis })));
+  const replacement = { ...momentumThesis, thesis: { ...momentumThesis.thesis, text: 'Recovered momentum may persist above the moving average.' } };
+  const p = await publisher.publish(f.lease,f.snapshotId,['A','B','C'].map(securityId => ({ securityId, kind: 'assessed', proposal: replacement })));
   const tracking = new Tracking(f.foundation,() => at);
   // Prior test left A paused; archive it before selecting a current opportunity.
   const old = await tracking.get('A');

@@ -35,6 +35,21 @@ it('shares exhausted search/model pools, publishes an incomplete material versio
     expect((await tracking.version(check.versionId))!.outcome).toBe('insufficient_evidence');
     expect((await tracking.get('A'))!.checkpointAt).toBe(selected.checkpointAt);
   } finally { await next.foundation.release(next.lease,at); }
+  const missing = await researchFixture('tracking:missing-market','2026-11-05',false,['B','C','D','E','F','G','H','I']); at = Date.parse('2026-11-05T06:30:00Z');
+  try {
+    const publisher = new ResearchPublisher(missing.foundation,() => at);
+    await publisher.begin(missing.lease,missing.snapshotId,{ cutoff: at+60000, expiresAt: at+86400000 });
+    const plan = (await publisher.plan(missing.snapshotId))!;
+    await publisher.publish(missing.lease,missing.snapshotId,plan.queue.map(q => ({ securityId: q.securityId, kind: 'assessed', proposal: momentumThesis })));
+    const tools = new ResearchTools(missing.foundation,missing.lease,{ secUserAgent: '' },() => at);
+    const runtime = new TrackingRuntime(tracking,tools,null,[],() => at);
+    for (let i=0;i<15 && !await runtime.step(missing.lease,missing.snapshotId,at+10000);i++) {}
+    const check = (await tracking.checks('A'))[0]!, version = (await tracking.version(check.versionId))!;
+    expect(check.status).toBe('incomplete'); expect(check.material).toContain('market_quality_deterioration');
+    expect(version.outcome).toBe('insufficient_evidence');
+    expect(version.thesis).toEqual(original.decisions[0]!.assessment!.thesis);
+    expect(version.invalidation).toEqual(original.decisions[0]!.assessment!.invalidation);
+  } finally { await missing.foundation.release(missing.lease,at); }
   const paused = await researchFixture('tracking:paused-day','2026-12-02'); at = Date.parse('2026-12-02T06:30:00Z');
   try {
     const publisher = new ResearchPublisher(paused.foundation,() => at);

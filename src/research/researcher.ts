@@ -11,7 +11,7 @@ export interface ResearchModel {
   readonly modelId: string;
   complete(request: ModelRequest, signal: AbortSignal): Promise<{ output: unknown; usage: ModelAllowance }>;
 }
-const responseSchema = z.discriminatedUnion('kind',[
+export const researchResponseSchema = z.discriminatedUnion('kind',[
   z.object({ kind: z.literal('tools'), requests: z.array(toolSchema).min(1).max(2) }).strict(),
   z.object({ kind: z.literal('assessment'), proposal: z.unknown() }).strict(),
 ]);
@@ -87,7 +87,7 @@ export class BoundedResearcher {
     try {
       const output = await dispatchModel(this.model,{ system: researchSystem, context, inputBound, maxOutput },ledger,callId,Math.min(deadline,plan.cutoff),this.clock);
       state.pending = null;
-      const parsed = responseSchema.safeParse(output);
+      const parsed = researchResponseSchema.safeParse(output);
       try {
         if (!parsed.success) throw new Error('invalid structured output');
         if (parsed.data.kind==='tools') state.requests = parsed.data.requests;

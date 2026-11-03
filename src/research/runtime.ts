@@ -37,7 +37,7 @@ export class ResearchRuntime {
       await this.publisher.begin(lease,snapshotId,{ cutoff: Math.max(snapshot.cutoff,snapshot.deadline-10*60000), expiresAt: snapshot.referenceDeadline });
     }
     const plan = (await this.publisher.plan(snapshotId))!;
-    this.researcher.tools.config.issuerCiks = Object.fromEntries(this.intake.mappings.filter(m => plan.queue.some(q => q.securityId===m.securityId && q.issuerId===m.issuerId)).map(m => [m.securityId,m.cik]));
+    this.researcher.tools.setIssuerCiks(Object.fromEntries(this.intake.mappings.filter(m => plan.queue.some(q => q.securityId===m.securityId && q.issuerId===m.issuerId)).map(m => [m.securityId,m.cik])));
     if (!await this.intake.step(lease,snapshotId,deadline)) return false;
     return this.researcher.step(lease,snapshotId,deadline);
   }

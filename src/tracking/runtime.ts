@@ -1,11 +1,10 @@
-import { z } from 'zod';
 import { hash, Conflict, type Lease } from '../persistence';
 import { MarketCapture } from '../market/capture';
 import { ResearchPublisher } from '../research/publisher';
 import { validateAssessment, type Assessment } from '../research/assessment';
 import { ResearchTools, type ToolRequest } from '../research/tools';
 import { dispatchModel } from '../research/model-call';
-import { researchSystem, insufficient, type ResearchModel } from '../research/researcher';
+import { researchSystem, researchResponseSchema, insufficient, type ResearchModel } from '../research/researcher';
 import type { ScreenRow } from '../screening/screen';
 import { type SavedObservation, type Snapshot } from '../market/types';
 import { Tracking, type Opportunity } from './store';
@@ -16,13 +15,6 @@ export type TrackingCheck = { snapshotId: string; securityId: string; reportDate
   material: string[]; gaps: string[]; versionId: string; previousVersionId: string; invalidated: string[]; market: MarketState | null };
 type Plan = { snapshotId: string; reportDate: string; cutoff: number; expiresAt: number; entries: Opportunity[] };
 type Work = { phase: 'search' | 'filings' | 'read' | 'assess'; pending: string | null; reads: string[]; gaps: string[]; repair: number; requests: ToolRequest[] };
-const modelResponse = z.discriminatedUnion('kind',[
-  z.object({ kind: z.literal('tools'), requests: z.array(z.discriminatedUnion('kind',[
-    z.object({ kind: z.literal('search'), topic: z.enum(['announcement','contradiction','explanation']) }).strict(),
-    z.object({ kind: z.literal('read'), sourceId: z.string().min(1).max(100) }).strict(),
-  ])).min(1).max(2) }).strict(),
-  z.object({ kind: z.literal('assessment'), proposal: z.unknown() }).strict(),
-]);
 export class TrackingRuntime {
   constructor(readonly tracking: Tracking, readonly tools: ResearchTools, readonly model: ResearchModel | null,
     readonly mappings: { securityId: string; issuerId: string; cik: string }[], readonly clock: () => number = Date.now) {}
@@ -59,7 +51,7 @@ export class TrackingRuntime {
     if (check) return (JSON.parse(check.value) as TrackingCheck).market;
     const snapshot = await new MarketCapture(this.store,this.clock).snapshot(row.snapshot_id,0,0);
     const market = snapshot ? await this.market(snapshot,row.security_id) : null;
-    return market?.row?.metrics ? { r20: market.row.metrics.r20, failedGates: market.row.failedGates, inputIds: market.row.inputIds } : null;
+    return market?.row?.metrics ? { r20: market.row.metrics.r20, failedGates: market.row.failedGates, asOf: market.row.eventThrough!, inputIds: market.row.inputIds } : null;
   }
   private async save(lease: Lease, plan: Plan, entry: Opportunity, work: Work, revision: number) {
     const result = await this.store.fenced(lease,this.clock(),[this.store.db.prepare(`INSERT INTO tracking_work(snapshot_id,security_id,revision,value) VALUES(?,?,?,?)
@@ -114,7 +106,10 @@ export class TrackingRuntime {
     const evidence = await this.tools.evidence(entry.securityId,check.cutoff);
     const recorded = await this.tracking.version(entry.thesisVersionId);
     const lastCheck = (await this.tracking.checks(entry.securityId)).find(c => c.snapshotId!==snapshotId && c.cutoff<=check.cutoff);
-    const changes = materialChanges(prior,await this.baseline(entry.versionId),row,observations,evidence,recorded ?? prior,Math.max(prior.cutoff,lastCheck?.cutoff ?? 0));
+    const marketCheck = (await this.tracking.checks(entry.securityId)).find(c => c.snapshotId!==snapshotId && c.market!==null && c.cutoff<=check.cutoff && !['paused','superseded'].includes(c.status));
+    const changes = materialChanges(prior,await this.baseline(entry.versionId),snapshot.status==='unavailable' ? null : row,observations,evidence,{
+      recorded: recorded ?? prior, evidenceSince: Math.max(prior.cutoff,lastCheck?.cutoff ?? 0),
+      marketSince: Math.max((recorded ?? prior).marketAsOf,marketCheck?.market?.asOf ?? 0), startSession: entry.startSession });
     Object.assign(check,changes);
     check.gaps.push(...work.gaps);
     const candidate = { securityId: entry.securityId, marketAsOf: row?.eventThrough ?? prior.marketAsOf, openAt: snapshot.open,
@@ -124,6 +119,7 @@ export class TrackingRuntime {
         assessment = this.preserveThesis(validateAssessment(insufficient(check.gaps.join('; ') || 'material_change_requires_evidence_review'),
           { ...candidate, evidence: [], cutoff: check.cutoff, expiresAt: plan.expiresAt }),recorded ?? prior);
       }
+      if (assessment) assessment = this.preserveThesis(assessment,recorded ?? prior);
       await this.commit(lease,plan,entry,check,assessment); return false;
     };
     if (check.invalidated.length && entry.thesisStatus!=='invalidated') {
@@ -148,7 +144,7 @@ export class TrackingRuntime {
     if (this.clock()>=deadline) return false;
     const passId = `tracking:${snapshotId}:${entry.securityId}`;
     const symbol = row?.identity?.symbol;
-    this.tools.config.issuerCiks = Object.fromEntries(this.mappings.map(m => [m.securityId,m.cik]));
+    this.tools.setIssuerCiks(Object.fromEntries(this.mappings.map(m => [m.securityId,m.cik])));
     const tool = async (request: ToolRequest) => {
       work.pending = 'tool_dispatch'; await this.save(lease,plan,entry,work,revision);
       const result = await this.tools.dispatch(entry.securityId,passId,request,Math.min(deadline,plan.cutoff),symbol);
@@ -188,7 +184,7 @@ export class TrackingRuntime {
     catch { check.gaps.push('model_budget_exhausted'); return finish(); }
     work.pending = callId; await this.save(lease,plan,entry,work,revision);
     try {
-      const response = modelResponse.parse(await dispatchModel(this.model,{ system, context, inputBound, maxOutput },this.tools.ledger,callId,Math.min(deadline,plan.cutoff),this.clock));
+      const response = researchResponseSchema.parse(await dispatchModel(this.model,{ system, context, inputBound, maxOutput },this.tools.ledger,callId,Math.min(deadline,plan.cutoff),this.clock));
       work.pending = null;
       if (response.kind==='tools') { work.requests = response.requests; await this.save(lease,plan,entry,work,revision+1); return false; }
       const a = validateAssessment(response.proposal,{ ...candidate, evidence, cutoff: Math.min(this.clock(),plan.cutoff), expiresAt: plan.expiresAt, modelId: this.model.modelId });

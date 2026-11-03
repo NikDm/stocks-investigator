@@ -32,6 +32,9 @@ export class ResearchTools {
     readonly clock: () => number = Date.now, readonly fetcher: typeof fetch = fetch) {
     this.ledger = new ResearchLedger(foundation,lease,clock);
   }
+  setIssuerCiks(ciks: Record<string,string>) {
+    this.config.issuerCiks = z.record(z.string().min(1).max(200),z.string().regex(/^\d{1,10}$/)).parse(ciks);
+  }
   async register(raw: SourceRegistration) {
     const source = sourceSchema.parse(raw);
     let official: ReturnType<typeof officialSource>;

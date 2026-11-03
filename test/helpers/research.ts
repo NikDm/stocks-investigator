@@ -4,7 +4,7 @@ import { MarketCapture } from '../../src/market/capture';
 import { Screener } from '../../src/screening/persistence';
 import type { Identity } from '../../src/market/types';
 export const researchNow = Date.parse('2026-11-03T06:30:00Z');
-export async function researchFixture(key: string, reportDate = '2026-11-03', useRunId = false, names = ['A','B','C','D','E','F','G','H','I'], finalClose?: string) {
+export async function researchFixture(key: string, reportDate = '2026-11-03', useRunId = false, names = ['A','B','C','D','E','F','G','H','I'], finalClose?: string, closeOverrides: Record<number,string> = {}) {
   const fixtureNow = Date.parse(`${reportDate}T06:30:00Z`);
   const foundation = new Foundation(env.DB), run = await foundation.enqueue(key,{},fixtureNow);
   if (useRunId) key = run.id;
@@ -24,7 +24,7 @@ export async function researchFixture(key: string, reportDate = '2026-11-03', us
   for (const identity of identities) {
     await capture.ingest(lease,key,{ task: identity.securityId, page: 0, nextToken: null,
       observations: dates.flatMap((s,i) => (['raw','split'] as const).map(basis => {
-        const c = finalClose && identity.securityId==='A' && i===60 ? finalClose : identity.securityId<='D' ? String((2000+i*5+Math.max(0,i-40)*10)/100) : '20';
+        const c = identity.securityId==='A' && closeOverrides[i] ? closeOverrides[i]! : finalClose && identity.securityId==='A' && i===60 ? finalClose : identity.securityId<='D' ? String((2000+i*5+Math.max(0,i-40)*10)/100) : '20';
         return { source: 'alpaca', securityId: identity.securityId, kind: 'daily' as const, symbol: identity.symbol, asof: identity.asof,
           feed: 'sip' as const, basis, eventAt: Date.parse(`${s.date}T20:00:00Z`), session: s.date, actionVersion: 'v1', mappingVersion: 'v1',
           value: { t: `${s.date}T00:00:00Z`, o: c, h: c, l: c, c, v: i>55 ? '1300000' : '1000000' } };
