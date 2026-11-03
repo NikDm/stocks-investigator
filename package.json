@@ -1,0 +1,26 @@
+{
+  "name": "stocks-investigator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false WRANGLER_LOG_PATH=/tmp/stocks-investigator-wrangler-logs wrangler dev --ip 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false WRANGLER_LOG_PATH=/tmp/stocks-investigator-wrangler-logs vitest run",
+    "db:migrate": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false WRANGLER_LOG_PATH=/tmp/stocks-investigator-wrangler-logs wrangler d1 migrations apply stocks-investigator --local",
+    "deploy:check": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false WRANGLER_LOG_PATH=/tmp/stocks-investigator-wrangler-logs wrangler deploy --dry-run --outdir /tmp/stocks-investigator-build",
+    "backup:check": "node scripts/restore-exercise.mjs"
+  },
+  "dependencies": {
+    "hono": "4.13.16",
+    "jose": "6.2.15",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.5.0",
+    "@cloudflare/workers-types": "5.20261103.1",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0",
+    "wrangler": "4.156.2"
+  }
+}

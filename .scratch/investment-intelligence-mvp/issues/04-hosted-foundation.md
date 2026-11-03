@@ -1,6 +1,6 @@
 # 04 — Create the private hosted application foundation
 
-Status: ready-for-agent
+Status: claimed
 Type: task
 Blocked by: 03
 
@@ -33,3 +33,20 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+
+## Answer
+
+Local foundation delivered; **not a hosted or production-ready application**. [Setup](../../../README.md), [operations/deployment/recovery and outstanding gates](../../../docs/operations.md), [production template](../../../wrangler.production.example.jsonc).
+
+- Strict TypeScript Hono Worker, pinned lockfile, Zod validation, local/deploy configuration, D1 migration and synthetic shell. Verified Access JWT issuer/audience/RS256 signature/expiry and single identity; canonical origin, CSRF, bounded bodies, escaped/paginated reports and no-store responses. Local generated signing keys are accepted only on loopback. No provider credentials/adapters or paid calls.
+- Public coordinator: durable idempotent scheduled/manual enqueue, singleton 90-second renewable lease, increasing fencing generation and SQL-guarded writes; multiple stages per tick, four-task concurrency helper, stage/invocation bounds, counted attempts and durable deferred retries. Atomic day/month request/token/spend-resource reservations reject missing limits and preserve unknown usage. Provider dispatch/price semantics remain owned by 05/07.
+- Versioned immutable input rows and typed snapshot/universe/reference/action/disposition/cohort/assessment envelopes. Atomic publication includes report and all artifacts; post-cutoff/missing inputs abort publication. SQL immutable guards, frozen pages, primary readback and append-only observed-time receipts prevent partial/stale publication. All foundation reports remain research-only.
+- Tests at the three user-confirmed seams prove private access/CSRF/rendering, leases/retries/reservations and immutable/atomic persistence. The representative local D1 load retained all **457,020 daily input rows (5,078 × 90)** and **5,078 universe members** using bounded input/staging pages; successful harness wall time approximately 15 seconds. This is not an actual Cron/provider/CPU/timeliness benchmark.
+- Strict typecheck, focused tests and full 17-test suite passed. Local migrations, Worker startup, authenticated health, unauthorized 401 and an actual local scheduled smoke run with durable completed report passed. Worker dry-run bundle passed. Encrypted disposable recovery verifies SQL checksum, every table's row totals/hash, integrity, foreign keys, cohort/receipt and pending reservation; damaged ciphertext is rejected without leaving a restored plaintext file. Example cohort hash: `c82ad01ae462bc5ac76a893673683d335b00ce3d9e2c8eeeb0a476a388b8b7e6`; pending reservation hash: `147762ba790be9c2dd09a415a51497a08c59b8f018d7e029a0151a36feb860f6`.
+
+### Explicit unverified deployment gates
+
+No account/domain has been configured, no resources provisioned, and no live Access, Cron, remote D1 restore, independent encrypted backup destination or key custody established. The EUR 45 estimate remains a planning assumption, **not an account-specific quote**. Provider limits/tax/FX/domain/backup cost and variable-charge exposure require real account evidence before any deployment approval. Hosted aggregate CPU/memory/wall behavior and combined real provider workload remain unmeasured. The operations runbook lists each gate, concrete configuration steps and recovery/monitoring policy. Daily independent backup/upload automation cannot be installed until its destination/custody is agreed. Local foundation acceptance is separate from those production-readiness gates, as permitted by this ticket.
+
+Code review pending before final completion.

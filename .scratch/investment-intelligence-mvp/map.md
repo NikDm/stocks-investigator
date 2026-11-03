@@ -24,7 +24,7 @@
 | 01 | [Verify affordable market data and public research access](issues/01-data-feasibility.md) | research | — | resolved |
 | 02 | [Define reproducible screening and evaluation rules](issues/02-screening-and-evaluation-contract.md) | research | 01 | resolved |
 | 03 | [Choose a minimal hosted architecture and refine implementation tickets](issues/03-minimal-architecture.md) | research | 01, 02 | resolved |
-| 04 | [Create the private hosted application foundation](issues/04-hosted-foundation.md) | task | 03 | ready-for-agent |
+| 04 | [Create the private hosted application foundation](issues/04-hosted-foundation.md) | task | 03 | claimed |
 | 05 | [Capture broker-eligible market snapshots and calendars](issues/05-market-snapshots.md) | task | 04 | needs-triage |
 | 06 | [Implement deterministic momentum screening and baseline snapshots](issues/06-momentum-screening.md) | task | 05 | needs-triage |
 | 07 | [Research candidates and publish immutable evidence-backed assessments](issues/07-bounded-evidence-research.md) | task | 06 | needs-triage |
