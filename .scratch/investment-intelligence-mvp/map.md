@@ -2,11 +2,11 @@
 
 ## Notes
 
-- **Current handoff (2026-11-03):** [Issue 01](issues/01-data-feasibility.md#current-completion--2026-11-03) is resolved as research. All 5,078 US-schedule STOCK inputs have identity/coverage audit records; gaps and provider limitations remain explicit. The user chose to carry observed pre-08:00 delivery verification into [05](issues/05-market-snapshots.md#observed-morning-freshness--carried-from-issue-01). [Issue 02](issues/02-screening-and-evaluation-contract.md#answer) is resolved with a versioned domain contract; 03 is resolved as architecture research: [design](architecture.md), [source comparison](architecture-sources.md), and [proposed ADR](../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md). 04 is ready-for-agent; 05–13 are refined but remain dependency-gated. Nothing has been provisioned.
+- **Current handoff (2026-11-03):** [Issue 01](issues/01-data-feasibility.md#current-completion--2026-11-03) is resolved as research. All 5,078 US-schedule STOCK inputs have identity/coverage audit records; gaps and provider limitations remain explicit. The user chose to carry observed pre-08:00 delivery verification into [05](issues/05-market-snapshots.md#observed-morning-freshness--carried-from-issue-01). [Issue 02](issues/02-screening-and-evaluation-contract.md#answer) is resolved with a versioned domain contract; 03 is resolved as architecture research: [design](architecture.md), [source comparison](architecture-sources.md), and [proposed ADR](../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md). 04 is resolved as a local synthetic foundation with explicit unverified production gates ([answer](issues/04-hosted-foundation.md#answer)); 05–13 retain their downstream readiness review. Nothing has been provisioned.
 - User chose Alpaca for private personal noncommercial research. Agreement interpretation is a documented limitation, not a repeated provider-clarification gate. No outreach, paid subscriptions or provisioning authorized.
 - Use the supplied implement skill for the selected issue. Research tickets authorize investigation, not application adapters. Ticket 03 refines dependent implementation tickets before marking them ready-for-agent.
 - Read [spec](spec.md), [discovery](../../docs/discovery.md) and [glossary](../../CONTEXT.md). Use `claimed` / `resolved` for active execution/completion and the documented triage strings for planned work.
-- Work is milestone-based, without estimates or a weekly time commitment. No application code or paid resources have been created.
+- Work is milestone-based, without estimates or a weekly time commitment. The local Worker/D1 foundation exists after 04; no paid resources have been created.
 - Current work is on the source workspace’s `main` branch; its Git metadata is now populated. The earlier `/tmp/stocks-investigator-integration` checkout is historical, not the current commit destination. No changes pushed.
 
 ## Milestones
@@ -24,7 +24,7 @@
 | 01 | [Verify affordable market data and public research access](issues/01-data-feasibility.md) | research | — | resolved |
 | 02 | [Define reproducible screening and evaluation rules](issues/02-screening-and-evaluation-contract.md) | research | 01 | resolved |
 | 03 | [Choose a minimal hosted architecture and refine implementation tickets](issues/03-minimal-architecture.md) | research | 01, 02 | resolved |
-| 04 | [Create the private hosted application foundation](issues/04-hosted-foundation.md) | task | 03 | claimed |
+| 04 | [Create the private hosted application foundation](issues/04-hosted-foundation.md) | task | 03 | resolved |
 | 05 | [Capture broker-eligible market snapshots and calendars](issues/05-market-snapshots.md) | task | 04 | needs-triage |
 | 06 | [Implement deterministic momentum screening and baseline snapshots](issues/06-momentum-screening.md) | task | 05 | needs-triage |
 | 07 | [Research candidates and publish immutable evidence-backed assessments](issues/07-bounded-evidence-research.md) | task | 06 | needs-triage |
@@ -36,6 +36,8 @@
 | 13 | [Optionally record actual purchases separately from opportunity selection](issues/13-purchase-recording.md) | task | 09 | needs-triage |
 
 ## Decisions-so-far
+
+- [Issue 04 local foundation completed, 2026-11-03](issues/04-hosted-foundation.md#answer): strict TypeScript Worker/Hono + D1 migrations, verified private JWT/CSRF access, durable fenced coordinator, atomic immutable publication and shared budget reservations. All 18 local tests pass, including 457,020 daily rows and full 5,078-member universe; local startup/Cron, migration, production dry-run and encrypted disposable restore passed. [Independent review](foundation-review.md) findings were fixed and verified. [Operations](../../docs/operations.md) records live account/domain/Access, quote/tax/FX/variable exposure, independent backup/key custody and hosted runtime gates; no deployed application or paid resources are claimed.
 
 - [Issue 03 completed, 2026-11-03](issues/03-minimal-architecture.md#answer): [minimal architecture](architecture.md) recommends one TypeScript Worker + D1 + checkpointed five-minute Cron, single-identity Access and direct bounded Haiku 4.5 tools, against VPS/SQLite and managed app/Postgres alternatives. Immutable SQL publication, whole-universe outcome capture, concurrency/fencing, trust boundaries, shared spend limits and recovery are specified. [Proposed ADR](../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md) records the trade-off without claiming investor approval. Planning total EUR 45/month includes domain, assumed tax/FX and contingency. 04–13 have concrete acceptance/seam proposals; only unblocked 04 is ready-for-agent. No software/deployment/model benchmark is claimed.
 
@@ -59,7 +61,7 @@
 - Screening thresholds and early-watch defaults are resolved in [v1](screening-evaluation-contract.md); predictive usefulness remains prospective and unproven.
 - Lifecycle/material-change rules are resolved in v1 and interfaces/downstream tasks are refined by 03; implementation and public-seam confirmation await their tickets.
 - Evaluation conventions are resolved in v1; auction/action coverage gaps and terminal outcomes remain explicit operational limitations for 05/11.
-- Architecture and model/tool limits are specified by 03; live runtime/private access/backups and account-specific billing await 04, model availability/quality and source-fetch enforcement await 07. Morning delivery remains unmeasured in 05; no deployment SLA or source-replay guarantee is claimed.
+- Architecture and model/tool limits are specified by 03; live runtime/private access/backups and account-specific billing remain the explicit deployment gates recorded by 04, model availability/quality and source-fetch enforcement await 07. Morning delivery remains unmeasured in 05; no deployment SLA or source-replay guarantee is claimed.
 - Whether actual results demonstrate selection value: prospective evidence from 11–12, not a prerequisite claim.
 
 ## Comments

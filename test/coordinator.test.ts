@@ -85,3 +85,15 @@ it('checkpoints at the invocation stage cap and preserves all remaining pages fo
   await drain(store, { clock: () => now });
   expect((await store.report(run.id))?.items).toHaveLength(70);
 });
+
+import { StageFailure } from '../src/coordinator';
+it('stops permanent permission failures and persists provider retry-not-before times', async () => {
+  const store = new Foundation(env.DB), now = Date.now() + 3000000;
+  const permanent = await store.enqueue('synthetic:permission', { pages: 1 }, now);
+  await drain(store, { clock: () => now, execute: async () => { throw new StageFailure('permission'); } });
+  expect((await store.run(permanent.id))?.state).toBe('failed');
+  expect((await store.run(permanent.id))?.attempts).toBe(1);
+  const limited = await store.enqueue('synthetic:retry-after', { pages: 1 }, now);
+  await drain(store, { clock: () => now, execute: async () => { throw new StageFailure('transient', now + 3600000); } });
+  expect((await store.run(limited.id))?.next_at).toBe(now + 3600000);
+});

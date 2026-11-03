@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { Foundation, type Item, type Lease } from './persistence';
 
 export const syntheticCommand = z.object({ pages: z.number().int().min(1).max(200).default(4) }).strict();
+export class StageFailure extends Error {
+  constructor(readonly kind: 'permission' | 'schema' | 'transient', readonly retryAt?: number) { super(kind); }
+}
 type Stage = { page: number; signal: AbortSignal; deadline: number; lease: Lease };
 export async function mapBounded<T, R>(items: T[], execute: (item: T) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
@@ -20,12 +23,13 @@ export async function drain(store: Foundation, options: {
 } = {}) {
   const clock = options.clock ?? Date.now;
   const start = clock();
-  const run = await store.next(start);
-  if (!run) return { pages: 0 };
-  const lease = await store.claim(run.id, crypto.randomUUID(), clock());
+  const candidate = await store.next(start);
+  if (!candidate) return { pages: 0 };
+  const lease = await store.claim(candidate.id, crypto.randomUUID(), clock());
   if (!lease) return { pages: 0 };
   let pages = 0;
   try {
+    const run = (await store.run(lease.runId))!;
     const command = syntheticCommand.parse(JSON.parse(run.payload));
     let page = run.cursor;
     // The synthetic executor is bounded to 50 tiny rows/stage. Reserve 250 ms CPU
@@ -33,9 +37,7 @@ export async function drain(store: Foundation, options: {
     // platform aggregate CPU ceiling. New executors require their own benchmark.
     while (page < command.pages && pages < 64 && clock() - start < 195000) {
       await store.renew(lease, clock());
-      const current = (await store.run(run.id))!;
-      if (current.attempts >= 3) { await store.fail(lease, clock()); break; }
-      await store.beginAttempt(lease, clock());
+      if (!await store.beginAttempt(lease, clock())) return { pages };
       const stageStart = clock();
       const controller = new AbortController();
       let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -53,17 +55,17 @@ export async function drain(store: Foundation, options: {
       page++; pages++;
     }
     if (page === command.pages && clock() - start < 230000) {
-      const current = (await store.run(run.id))!;
-      if (current.attempts >= 3) { await store.fail(lease, clock()); return { pages }; }
-      await store.beginAttempt(lease, clock());
+      if (!await store.beginAttempt(lease, clock())) return { pages };
       await store.renew(lease, clock());
       if (!await store.report(run.id)) await store.publish(lease, { id: run.id, cutoff: clock(), expectedPages: command.pages }, clock());
       await store.certify(lease, run.id, clock);
       await store.complete(lease, clock());
     }
-  } catch {
+  } catch (error) {
     // Fixed error codes only: provider errors may contain credentials or raw text.
-    await store.fail(lease, clock());
+    const permanent = error instanceof z.ZodError || error instanceof SyntaxError
+      || error instanceof StageFailure && error.kind !== 'transient';
+    await store.fail(lease, clock(), { permanent, ...(error instanceof StageFailure && error.retryAt !== undefined ? { retryAt: error.retryAt } : {}) });
   } finally {
     // On a killed invocation this is skipped; the 90-second lease permits recovery.
     await store.release(lease, clock());

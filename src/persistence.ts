@@ -33,7 +33,7 @@ export class Foundation {
     lease.runId, lease.owner, lease.generation, now);
   }
   async fenced(lease: Lease, now: number, statements: D1PreparedStatement[]) {
-    await this.db.batch([this.guard(lease, now), ...statements, this.sql('DELETE FROM write_guard WHERE id=1')]);
+    return this.db.batch([this.guard(lease, now), ...statements, this.sql('DELETE FROM write_guard WHERE id=1')]);
   }
   async enqueue(key: string, payload: unknown, now: number): Promise<Run> {
     const body = JSON.stringify(payload);
@@ -97,13 +97,17 @@ export class Foundation {
     ]);
   }
   async beginAttempt(lease: Lease, now: number) {
-    await this.fenced(lease, now, [this.sql('UPDATE runs SET attempts=attempts+1,updated_at=? WHERE id=? AND attempts<3', now, lease.runId)]);
-    return (await this.run(lease.runId))!.attempts;
+    const results = await this.fenced(lease, now, [this.sql('UPDATE runs SET attempts=attempts+1,updated_at=? WHERE id=? AND attempts<3', now, lease.runId)]);
+    if (results[1]!.meta.changes === 1) return true;
+    await this.fail(lease, now);
+    return false;
   }
-  async fail(lease: Lease, now: number) {
+  async fail(lease: Lease, now: number, options: { permanent?: boolean; retryAt?: number } = {}) {
     const run = (await this.run(lease.runId))!;
-    const terminal = run.attempts >= 3;
-    const next = now + 1000 * 2 ** run.attempts + Math.floor(Math.random() * 1000);
+    const terminal = options.permanent || run.attempts >= 3;
+    const backoff = now + 1000 * 2 ** run.attempts + Math.floor(Math.random() * 1000);
+    const retryAt = options.retryAt;
+    const next = retryAt !== undefined && Number.isSafeInteger(retryAt) ? Math.max(backoff, retryAt) : backoff;
     await this.fenced(lease, now, [
       this.sql('UPDATE runs SET state=?,next_at=?,updated_at=?,error_code=? WHERE id=?', terminal ? 'failed' : 'queued', next, now, 'stage_failed', lease.runId),
       this.sql('INSERT INTO stage_events(run_id,generation,at,code,page) VALUES(?,?,?,?,?)', lease.runId, lease.generation, now, terminal ? 'failed' : 'retry', run.cursor),
