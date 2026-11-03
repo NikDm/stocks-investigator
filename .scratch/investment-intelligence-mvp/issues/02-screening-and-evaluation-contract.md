@@ -1,6 +1,6 @@
 # 02 — Define reproducible screening and evaluation rules
 
-Status: ready-for-agent
+Status: resolved
 Type: research
 Blocked by: 01
 
@@ -29,3 +29,9 @@ Created from the product discovery interview. Work is milestone-based with no we
 ### 2026-11-03 feasibility handoff
 
 Issue 01 is resolved as research; this ticket is now unblocked. Use [full-universe evidence](../coverage-check.md) and [cost/source comparison](../public-research-check.md). Define share-class/type eligibility, identity conflict/unlisted reconciliation, minimum history/coverage and missing-outcome rules from the actual exception ledger. Historical opening-auction observations are available in samples as well as minute bars; choose and version an explicit reference/venue/condition contract. Actual morning punctuality was moved by the user to 05 and remains unverified. Do not interpret provider asset presence, a broker suffix, or successful HTTP status as complete eligible coverage.
+
+## Answer
+
+Completed 2026-11-03 as research, with no application implementation. [Versioned screening/evaluation contract](../screening-evaluation-contract.md) defines company-share identity/type eligibility, 61-session quality/liquidity gates, sustained momentum and deterministic ranking, bounded research/early watch, novelty, material changes, expiry/invalidation/renewal, official-opening reference and freezes, separate refresh cohorts, hypothetical 10/20/30-session outcomes, costs, action/missing-data arithmetic, daily-close downside, saved-universe review and usefulness feedback. Seven worked examples cover signals, bounds, timing, outcomes and lifecycle. [Primary-source semantics check](../screening-data-semantics.md) supports provider-field choices.
+
+Numeric thresholds are prospective versioned design defaults, not optimized predictors or investor risk limits. Limitations remain explicit: account executability, unresolved identities, auction/action completeness, source replay rights and unmeasured morning punctuality (05). Documentation arithmetic/link checks and two-axis review apply; no application typechecker or test suite exists. 03 must refine downstream tasks before they become ready-for-agent; no downstream implementation was performed.
