@@ -56,3 +56,5 @@ Bounded evidence research (issue 07) is documented in [the research runbook](doc
 Morning review (issue 08) is documented in [the morning runbook](docs/morning-review.md). Tracked opportunities (issue 09), including the ten-slot cap, explicit renewal/archive, immutable material-change checks and private controls, are documented in [the tracking runbook](docs/tracking.md).
 
 Manual pre-opening re-review (issue 10) is documented in [the refresh runbook](docs/refresh.md), including private queued commands, tracked/morning comparisons, conservative request windows, delayed-price warnings and separate immutable refresh cohorts.
+
+Prospective fixed-horizon evaluation (issue 11) is documented in [the outcomes runbook](docs/outcomes.md), including immutable calculation revisions, action reconciliation, coverage, separate morning/refresh comparisons and review-effort denominators.

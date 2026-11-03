@@ -23,21 +23,26 @@ export function calculateOutcome(input: OutcomeInputs): Outcome {
     sensitivity0: null, sensitivity25: null, downside: { status: 'unavailable', observed: 0, expected: input.horizon, value: null }, inputIds: [] };
   if (!endpoint || input.now<endpoint.closeAt) return result;
   result.status = 'unresolved';
-  if (!input.reference || input.reference.acquiredAt>input.now || !new D(input.reference.price).isPositive()) return { ...result, reason: 'missing_reference' };
+  if (!input.reference || input.reference.acquiredAt>input.now || !new D(input.reference.price).gt(0)) return { ...result, reason: 'missing_reference' };
   result.inputIds.push(input.reference.id);
   if (!input.actionsThrough || input.actionsThrough<endpoint.date) return { ...result, reason: 'unresolved_action' };
   const p0 = new D(input.reference.price), holdings = new Map([[input.securityId,new D(1)]]);
   let cash = new D(0), worst = new D(0), observed = 0, final: InstanceType<typeof D> | null = null;
   const actions = input.actions.filter(a => a.session>input.entrySession && a.session<=endpoint.date)
     .sort((a,b) => a.session.localeCompare(b.session) || a.order-b.order || a.id.localeCompare(b.id));
-  let actionCursor = 0;
+  let actionCursor = 0, missingSuccessorEndpoint = false;
   for (const session of window) {
+    const pendingActions=actions.slice(actionCursor).filter(a=>a.session<=session.date);
+    const relevant=new Set([...holdings].filter(([,quantity])=>quantity.gt(0)).map(([id])=>id));
+    for (let pass=0;pass<pendingActions.length;pass++) for (const action of pendingActions) {
+      if (relevant.has(action.securityId) && (action.kind==='conversion' || action.kind==='spinoff')) for (const successor of action.successors) relevant.add(successor.securityId);
+    }
     while (actions[actionCursor] && actions[actionCursor]!.session<=session.date) {
       const action = actions[actionCursor++]!;
       const quantity = holdings.get(action.securityId);
       if (!quantity || quantity.isZero()) continue;
       result.inputIds.push(action.id);
-      if (actions.some(other => other.id!==action.id && other.securityId===action.securityId && other.session===action.session && other.order===action.order)) return { ...result, reason: 'unresolved_action' };
+      if (actions.some(other => other.id!==action.id && relevant.has(other.securityId) && other.session===action.session && other.order===action.order)) return { ...result, reason: 'unresolved_action' };
       if (action.kind==='unresolved' || action.acquiredAt>input.now) return { ...result, reason: 'unresolved_action' };
       if (action.kind==='split') holdings.set(action.securityId,quantity.mul(action.ratio));
       if (action.kind==='dividend' && action.session>input.entrySession) cash = cash.plus(quantity.mul(action.cash));
@@ -51,16 +56,16 @@ export function calculateOutcome(input: OutcomeInputs): Outcome {
       if (quantity.isZero()) continue;
       const prices = input.closes.filter(p => p.securityId===securityId && p.session===session.date && p.acquiredAt<=input.now);
       const price = prices[0];
-      if (!price || !new D(price.price).isPositive() || prices.some(p => !new D(p.price).eq(price.price))) { wealth = null; break; }
+      if (!price || !new D(price.price).gt(0) || prices.some(p => !new D(p.price).eq(price.price))) { wealth = null; if (session.date===endpoint.date && securityId!==input.securityId) missingSuccessorEndpoint=true; continue; }
       result.inputIds.push(...prices.map(p => p.id));
-      wealth = wealth!.plus(quantity.mul(price.price));
+      if (wealth!==null) wealth = wealth.plus(quantity.mul(price.price));
     }
     if (wealth!==null) { observed++; worst = D.min(worst,wealth.div(p0).minus(1)); }
     if (session.date===endpoint.date) final = wealth;
   }
   result.inputIds = [...new Set(result.inputIds)].sort();
   result.downside = { status: observed===input.horizon ? 'complete' : observed>0 ? 'partial' : 'unavailable', observed, expected: input.horizon, value: observed ? rounded(worst) : null };
-  if (final===null) return { ...result, reason: 'missing_endpoint' };
+  if (final===null) return { ...result, reason: missingSuccessorEndpoint ? 'unresolved_action' : 'missing_endpoint' };
   const gross = rounded(final.div(p0).minus(1));
   return { ...result, status: 'resolved', reason: null, gross, sensitivity0: gross,
     adjusted: rounded(final.mul('0.999').div(p0.mul('1.001')).minus(1)), sensitivity25: rounded(final.mul('0.9975').div(p0.mul('1.0025')).minus(1)) };

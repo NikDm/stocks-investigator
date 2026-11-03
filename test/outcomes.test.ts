@@ -17,6 +17,10 @@ it('keeps immature horizons pending and a missing endpoint unresolved without sh
   expect(calculateOutcome(input)).toMatchObject({ status: 'pending', adjusted: null });
   input.now = 40000; input.closes = input.closes.filter(p => p.session!=='2026-12-20');
   expect(calculateOutcome(input)).toMatchObject({ status: 'unresolved', reason: 'missing_endpoint', adjusted: null, downside: { status: 'partial', observed: 19 } });
+  input.closes.push({id:'invalid-zero-close',securityId:'A',session:'2026-12-20',price:'0',acquiredAt:20000});
+  expect(calculateOutcome(input)).toMatchObject({status:'unresolved',reason:'missing_endpoint',gross:null});
+  input.reference={price:'0',id:'invalid-zero-reference',acquiredAt:1000};
+  expect(calculateOutcome(input)).toMatchObject({status:'unresolved',reason:'missing_reference',gross:null});
 });
 it('retains endpoint returns with an explicitly partial missing-middle path', () => {
   const input = inputs(); input.closes = input.closes.filter(p => p.session!=='2026-12-05');
@@ -61,5 +65,22 @@ it('requires explicit ordering for same-day entitlements and keeps missing succe
   ];
   expect(calculateOutcome(input)).toMatchObject({status:'unresolved',reason:'unresolved_action'});
   input.actions = [{id:'spinoff',securityId:'A',session:'2026-12-04',acquiredAt:4000,order:0,kind:'spinoff',successors:[{securityId:'B',ratio:'1'}]}];
-  expect(calculateOutcome(input)).toMatchObject({status:'unresolved',reason:'missing_endpoint'});
+  expect(calculateOutcome(input)).toMatchObject({status:'unresolved',reason:'unresolved_action'});
+  input.actions = [
+    {id:'parent-conversion',securityId:'A',session:'2026-12-04',acquiredAt:4000,order:0,kind:'conversion',cash:'0',successors:[{securityId:'B',ratio:'1'}]},
+    {id:'successor-dividend',securityId:'B',session:'2026-12-04',acquiredAt:4000,order:0,kind:'dividend',cash:'1'},
+  ];
+  expect(calculateOutcome(input)).toMatchObject({status:'unresolved',reason:'unresolved_action'});
+});
+
+it('ignores actions on disposed predecessors when ordering held-successor entitlements', () => {
+  const input=inputs();
+  input.actions=[
+    {id:'A-B',securityId:'A',session:'2026-12-05',acquiredAt:5000,order:0,kind:'conversion',cash:'0',successors:[{securityId:'B',ratio:'1'}]},
+    {id:'B-C',securityId:'B',session:'2026-12-10',acquiredAt:10000,order:0,kind:'conversion',cash:'0',successors:[{securityId:'C',ratio:'1'}]},
+    {id:'disposed-B-dividend',securityId:'B',session:'2026-12-15',acquiredAt:15000,order:0,kind:'dividend',cash:'9'},
+    {id:'held-C-dividend',securityId:'C',session:'2026-12-15',acquiredAt:15000,order:0,kind:'dividend',cash:'1'},
+  ];
+  input.closes=sessions.slice(0,20).map(s=>({id:s.date,session:s.date,acquiredAt:s.closeAt,securityId:s.date<'2026-12-05' ? 'A' : s.date<'2026-12-10' ? 'B' : 'C',price:'110'}));
+  expect(calculateOutcome(input)).toMatchObject({status:'resolved',gross:'0.110000000000'});
 });

@@ -41,3 +41,18 @@ export function officialOpening(o: SavedObservation, venue: string, open: number
     && time!==null && time>=BigInt(open)*1000000n && time<=BigInt(open+30*60000)*1000000n
     && typeof price==='string' && /^(0|[1-9]\d*)(\.\d+)?$/.test(price) && compare(price,'0')>0;
 }
+
+/** The same primary-venue Q resolver serves captured references and bounded outcome partitions. */
+export function openingReference(rows:{id:string;occurrences:number;o:SavedObservation}[],venue:string|undefined,open:number|undefined,cutoff:number) {
+  const empty = (status:string) => ({status,price:null as string|null,eventAt:null as number|null,eventTimestamp:null as string|null,inputIds:[] as string[],qualifyingReceipts:0,cutoff});
+  if (!venue || open===undefined) return empty('unknown_primary_venue');
+  if (rows.length>1000) return empty('reference_input_limit');
+  const qualifying=rows.filter(({o}) => officialOpening(o,venue,open));
+  if (!qualifying.length) return empty('missing_reference');
+  const price=qualifying[0]!.o.value['p'] as string;
+  const conflict=qualifying.some(r => compare(r.o.value['p'] as string,price)!==0);
+  const sorted=qualifying.sort((a,b) => openingTime(a.o)!<openingTime(b.o)! ? -1 : openingTime(a.o)!>openingTime(b.o)! ? 1 : 0);
+  return {...empty(conflict ? 'conflict' : 'available'),price:conflict ? null : sorted[0]!.o.value['p'] as string,
+    eventAt:conflict ? null : sorted[0]!.o.eventAt,eventTimestamp:conflict ? null : sorted[0]!.o.value['t'] as string,
+    inputIds:[...new Set(sorted.map(r => r.id))],qualifyingReceipts:qualifying.reduce((n,r) => n+r.occurrences,0)};
+}

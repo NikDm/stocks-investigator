@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { D } from '../decimal';
 import { Foundation, hash, type Lease } from '../persistence';
-import { officialOpening } from '../market/quality';
+import { openingReference } from '../market/quality';
 import { MarketCapture, venues } from '../market/capture';
 import { instant } from '../market/calendar';
 import type { Decision, SavedObservation, Snapshot } from '../market/types';
@@ -26,6 +26,13 @@ type RevisionRow = { id:string; snapshot_id:string; security_id:string; horizon:
 function revision(r: RevisionRow): Revision {
   return { id:r.id,snapshotId:r.snapshot_id,securityId:r.security_id,horizon:r.horizon,kind:r.kind,cutoff:r.cutoff,recordedAt:r.recorded_at,
     revisionOf:r.revision_of,reason:r.reason,inputHash:r.input_hash,inputs:JSON.parse(r.inputs) as OutcomeInputs,value:JSON.parse(r.value) as Outcome };
+}
+function uncalculated(snapshot:Snapshot,horizon:10|20|30,now:number) {
+  const dates=snapshot.calendar.filter(s => s.date>=snapshot.reportDate);
+  const outcome=calculateOutcome({securityId:'',entrySession:snapshot.reportDate,horizon,now,
+    sessions:dates.slice(0,horizon).map(s => ({date:s.date,closeAt:instant(s.date,s.close,'America/New_York'),deadline:0})),reference:null,actionsThrough:null,actions:[],closes:[]});
+  if (outcome.status!=='pending') outcome.reason='awaiting_calculation';
+  return outcome;
 }
 export class Outcomes {
   constructor(readonly foundation:Foundation, readonly clock:()=>number=Date.now) {}
@@ -60,6 +67,35 @@ export class Outcomes {
       .bind(id,value.inputId,this.clock(),value.reason,JSON.stringify(value.evidence),encoded)]);
     return id;
   }
+  private async observations(ids:string[],start:string,end:string,cutoff:number,limit:number) {
+    // Find only event identities ever dated inside this holding window, then follow their corrections outside it.
+    const keys=(await this.db.prepare(`SELECT DISTINCT o.security_id AS securityId,json_extract(o.value,'$.value.id') AS eventId,
+      CASE WHEN json_extract(o.value,'$.value.id') IS NULL THEN o.id ELSE NULL END AS inputId
+      FROM market_observations o JOIN market_sightings p ON p.input_id=o.id
+      WHERE o.security_id IN (SELECT value FROM json_each(?)) AND o.kind='action' AND o.basis='raw'
+      AND o.session>=? AND o.session<=? AND p.acquired_at<=? LIMIT 501`)
+      .bind(JSON.stringify(ids),start,end,cutoff).all<{securityId:string;eventId:string|null;inputId:string|null}>()).results;
+    if (keys.length>500) return {rows:[] as SavedObservation[],limited:true};
+    const rows=(await this.db.prepare(`WITH selected AS (
+      SELECT * FROM market_observations WHERE security_id IN (SELECT value FROM json_each(?)) AND kind='daily' AND basis='raw' AND session>=? AND session<=?
+      UNION ALL
+      SELECT o.* FROM json_each(?) j JOIN market_observations o ON o.security_id=json_extract(j.value,'$.securityId')
+        AND json_extract(o.value,'$.value.id')=json_extract(j.value,'$.eventId')
+      WHERE o.kind='action' AND o.basis='raw' AND json_extract(j.value,'$.eventId') IS NOT NULL
+      UNION ALL
+      SELECT o.* FROM json_each(?) j JOIN market_observations o ON o.id=json_extract(j.value,'$.inputId')
+      WHERE json_extract(j.value,'$.eventId') IS NULL
+    ), acquired AS (
+      SELECT o.*,MAX(p.acquired_at) AS seen_at FROM selected o JOIN market_sightings p ON p.input_id=o.id
+      WHERE p.acquired_at<=? GROUP BY o.id
+    ), latest AS (
+      SELECT *,RANK() OVER(PARTITION BY CASE WHEN kind='action' AND json_extract(value,'$.value.id') IS NOT NULL
+        THEN json_array(security_id,kind,json_extract(value,'$.value.id')) ELSE logical_key END ORDER BY seen_at DESC) AS rank FROM acquired
+    ) SELECT id,seen_at AS acquired_at,revision_of,value FROM latest WHERE rank=1 AND session>=? AND session<=? ORDER BY session,id LIMIT ?`)
+      .bind(JSON.stringify(ids),start,end,JSON.stringify(keys),JSON.stringify(keys),cutoff,start,end,limit+1)
+      .all<{id:string;acquired_at:number;revision_of:string|null;value:string}>()).results;
+    return {rows:rows.map(r=>({...JSON.parse(r.value) as SavedObservation,id:r.id,acquiredAt:r.acquired_at,revisionOf:r.revision_of})),limited:rows.length>limit};
+  }
   private async inputs(snapshotId:string,securityId:string,horizon:10|20|30,cutoff:number,initial:boolean):Promise<OutcomeInputs> {
     const snapshot = await this.snapshot(snapshotId), dates = snapshot.calendar.filter(s => s.date>=snapshot.reportDate).slice(0,horizon+1);
     const sessions = dates.slice(0,horizon).map((s,i) => ({date:s.date,closeAt:instant(s.date,s.close,'America/New_York'),
@@ -79,13 +115,9 @@ export class Outcomes {
       visited.add(member.id);
       if (visited.size>20) { covered=false; break; }
       // Per-security bounded interval, latest revision of each logical observation as of acquisition cutoff.
-      const rows = (await this.db.prepare(`SELECT id,acquired_at,revision_of,value FROM (
-        SELECT *,RANK() OVER(PARTITION BY logical_key ORDER BY acquired_at DESC) AS rank FROM market_observations
-        WHERE security_id=? AND basis='raw' AND kind IN ('daily','action') AND session>=? AND session<=? AND acquired_at<=?)
-        WHERE rank=1 ORDER BY session,id LIMIT 501`).bind(member.id,member.start,endpoint,cutoff)
-        .all<{id:string;acquired_at:number;revision_of:string|null;value:string}>()).results;
-      if (rows.length>500) { covered=false; break; }
-      const observations:SavedObservation[] = rows.map(r => ({...JSON.parse(r.value) as SavedObservation,id:r.id,acquiredAt:r.acquired_at,revisionOf:r.revision_of}));
+      const loaded=await this.observations([member.id],member.start,endpoint,cutoff,500);
+      if (loaded.limited) {covered=false;break;}
+      const observations=loaded.rows;
       // An empty terminal response counts as coverage; a pending/failed/partial page never does.
       const coverage = await this.db.prepare(`SELECT snapshot_id,task,terminal_page AS page FROM outcome_action_coverage
         WHERE security_id=? AND start_session<=? AND end_session>=? AND acquired_at<=? ORDER BY acquired_at DESC LIMIT 1`)
@@ -116,7 +148,7 @@ export class Outcomes {
     }
     const input:OutcomeInputs = {securityId,entrySession:snapshot.reportDate,horizon,now:cutoff,sessions,reference,actionsThrough:covered ? endpoint : null,actions,closes};
     // Coverage receipts and the verified Q source records are retained alongside each calculation.
-    return Object.assign(input,{queriedMembers:visited.size,coverageIds,referenceInputs:ref.inputIds,referenceStatus:ref.status,ruleVersion:snapshot.ruleVersion});
+    return Object.assign(input,{queriedMembers:visited.size,coverageIds,referenceInputs:ref.inputIds,referenceStatus:ref.status,referenceReceipt:ref,ruleVersion:snapshot.ruleVersion});
   }
   async calculate(lease:Lease,snapshotId:string,securityId:string,horizon:10|20|30,correctionReason?:string):Promise<Revision> {
     if (![10,20,30].includes(horizon)) throw new Error('invalid horizon');
@@ -162,8 +194,7 @@ export class Outcomes {
       SELECT rowid FROM outcome_revisions WHERE snapshot_id=d.snapshot_id AND security_id=d.security_id AND horizon=? ORDER BY recorded_at DESC,rowid DESC LIMIT 1)
       WHERE d.snapshot_id=? AND d.reason='eligible' AND d.security_id>? ORDER BY d.security_id LIMIT 100`).bind(horizon,snapshotId,after).all<RevisionRow>()).results;
     const dates = snapshot.calendar.filter(s => s.date>=snapshot.reportDate), endpoint = dates[horizon-1];
-    const pending = calculateOutcome({securityId:'',entrySession:snapshot.reportDate,horizon,now:this.clock(),sessions:dates.slice(0,horizon).map(s => ({date:s.date,closeAt:instant(s.date,s.close,'America/New_York'),deadline:0})),reference:null,actionsThrough:null,actions:[],closes:[]});
-    if (pending.status!=='pending') pending.reason = 'awaiting_calculation';
+    const pending = uncalculated(snapshot,horizon,this.clock());
     return {snapshotId,horizon,endpoint:endpoint?.date ?? null,items:rows.map(r => ({securityId:r.security_id,revision:r.id ? revision(r) : null,outcome:r.id ? JSON.parse(r.value) as Outcome : pending})),next:rows.length===100 ? rows.at(-1)!.security_id : null};
   }
   async member(snapshotId:string,securityId:string,horizon:10|20|30) {
@@ -171,9 +202,7 @@ export class Outcomes {
     if (!member) return null;
     const prior = await this.latest(snapshotId,securityId,horizon);
     if (prior) return {securityId,outcome:prior.value};
-    const snapshot = await this.snapshot(snapshotId), dates = snapshot.calendar.filter(s => s.date>=snapshot.reportDate);
-    const outcome = calculateOutcome({securityId,entrySession:snapshot.reportDate,horizon,now:this.clock(),sessions:dates.slice(0,horizon).map(s => ({date:s.date,closeAt:instant(s.date,s.close,'America/New_York'),deadline:0})),reference:null,actionsThrough:null,actions:[],closes:[]});
-    if (outcome.status!=='pending') outcome.reason='awaiting_calculation';
+    const outcome=uncalculated(await this.snapshot(snapshotId),horizon,this.clock());
     return {securityId,outcome};
   }
   /** A bounded SQL partition shares raw prices, coverage and Q receipts across 20 frozen members. */
@@ -182,37 +211,28 @@ export class Outcomes {
     const cutoff = instant(next.date,'08:00','Europe/Zagreb'), endpoint=dates[horizon-1]!.date, encoded=JSON.stringify(ids);
     const decisions = (await this.db.prepare("SELECT value FROM market_decisions WHERE snapshot_id=? AND reason='eligible' AND security_id IN (SELECT value FROM json_each(?))")
       .bind(snapshotId,encoded).all<{value:string}>()).results.map(r => JSON.parse(r.value) as Decision);
-    const prices = (await this.db.prepare(`SELECT id,security_id,acquired_at,value FROM (
-      SELECT *,RANK() OVER(PARTITION BY logical_key ORDER BY acquired_at DESC) AS rank FROM market_observations
-      WHERE security_id IN (SELECT value FROM json_each(?)) AND basis='raw' AND kind IN ('daily','action') AND session>=? AND session<=? AND acquired_at<=?)
-      WHERE rank=1 LIMIT 2001`).bind(encoded,snapshot.reportDate,endpoint,cutoff).all<{id:string;security_id:string;acquired_at:number;value:string}>()).results;
-    const openings = (await this.db.prepare(`SELECT o.id,o.value,p.acquired_at FROM market_sightings p JOIN market_observations o ON o.id=p.input_id
-      WHERE p.snapshot_id=? AND p.security_id IN (SELECT value FROM json_each(?)) AND p.kind='opening' AND p.session=? AND p.acquired_at<=? LIMIT 1001`)
-      .bind(snapshotId,encoded,snapshot.reportDate,snapshot.referenceDeadline).all<{id:string;value:string;acquired_at:number}>()).results;
-    if (prices.length>2000 || openings.length>1000) return {completed:0,complex:ids[0]!};
+    const loaded=await this.observations(ids,snapshot.reportDate,endpoint,cutoff,2000), observations=loaded.rows;
+    const openings = await new MarketCapture(this.foundation,this.clock).openingInputs(snapshotId,ids,snapshot.reportDate,snapshot.referenceDeadline);
+    if (loaded.limited || openings.length>1000) return {completed:0,complex:ids[0]!};
     const coverage = (await this.db.prepare(`SELECT snapshot_id,task,security_id,terminal_page FROM outcome_action_coverage
       WHERE security_id IN (SELECT value FROM json_each(?)) AND start_session<=? AND end_session>=? AND acquired_at<=?
       ORDER BY acquired_at DESC LIMIT 2001`).bind(encoded,snapshot.reportDate,endpoint,cutoff)
       .all<{snapshot_id:string;task:string;security_id:string;terminal_page:number}>()).results;
-    const observations = prices.map(r => ({...JSON.parse(r.value) as SavedObservation,id:r.id,acquiredAt:r.acquired_at}));
-    const auctions = openings.map(r => ({...JSON.parse(r.value) as SavedObservation,id:r.id,acquiredAt:r.acquired_at}));
+    const auctions = openings.map(r => ({id:r.id,occurrences:r.occurrences,o:{...JSON.parse(r.value) as SavedObservation,id:r.id,acquiredAt:r.acquired_at}}));
     const revisions:Revision[] = []; let complex:string|undefined;
     for (const id of ids) {
       const identity = decisions.find(d => d.identity?.securityId===id)?.identity;
       if (!identity) throw new Error('frozen universe member required');
       const memberPrices = observations.filter(o => o.securityId===id);
       if (memberPrices.some(o => o.kind==='action' && o.session>snapshot.reportDate)) { complex ??= id; continue; }
-      const qualifying = auctions.filter(o => o.securityId===id && officialOpening(o,venues[identity.primaryVenue] ?? '',snapshot.open));
-      const price = qualifying[0]?.value['p'] as string|undefined;
-      const available = price!==undefined && qualifying.every(o => new D(String(o.value['p'])).eq(price));
-      const referenceInputs = [...new Set(qualifying.map(o => o.id))].sort();
+      const ref = openingReference(auctions.filter(row => row.o.securityId===id),venues[identity.primaryVenue],snapshot.open,snapshot.referenceDeadline);
       const receipt = coverage.find(c => c.security_id===id);
       const inputs:OutcomeInputs = Object.assign({securityId:id,entrySession:snapshot.reportDate,horizon,now:cutoff,
         sessions:dates.slice(0,horizon).map((s,i) => ({date:s.date,closeAt:instant(s.date,s.close,'America/New_York'),deadline:instant(dates[i+1]!.date,'08:00','Europe/Zagreb')})),
-        reference:available ? {price:price!,id:await hash(JSON.stringify(referenceInputs)),acquiredAt:snapshot.referenceDeadline} : null,
+        reference:ref.status==='available' && ref.price ? {price:ref.price,id:await hash(JSON.stringify(ref)),acquiredAt:snapshot.referenceDeadline} : null,
         actionsThrough:receipt ? endpoint : null, actions:[],
         closes:memberPrices.filter(o => o.kind==='daily' && amount.safeParse(o.value['c']).success).map(o => ({id:o.id,securityId:id,session:o.session,price:String(o.value['c']),acquiredAt:o.acquiredAt})),
-      },{ruleVersion:snapshot.ruleVersion,referenceInputs,referenceStatus:available ? 'available' : qualifying.length ? 'conflict' : 'missing_reference',
+      },{ruleVersion:snapshot.ruleVersion,referenceInputs:ref.inputIds,referenceStatus:ref.status,referenceReceipt:ref,
         coverageIds:receipt ? [`${receipt.snapshot_id}:${receipt.task}:${receipt.terminal_page}`] : []});
       revisions.push(await this.draft(snapshotId,id,horizon,inputs,null));
     }
@@ -222,6 +242,7 @@ export class Outcomes {
     return {completed:revisions.length,complex};
   }
   async tick(lease:Lease,limit=240) {
+    if (!Number.isInteger(limit) || limit<1) throw new Error('invalid outcome partition limit');
     const due = (await this.db.prepare(`SELECT * FROM outcome_work WHERE due_at<=? ORDER BY due_at,snapshot_id,horizon,security_id LIMIT ?`)
       .bind(this.clock(),Math.min(limit,240)).all<{snapshot_id:string;security_id:string;horizon:10|20|30}>()).results;
     const started=this.clock(); let completed=0, complexUsed=false;

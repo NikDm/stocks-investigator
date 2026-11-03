@@ -1,6 +1,6 @@
 import { Foundation, hash, type Lease } from '../persistence';
 import { z } from 'zod';
-import { validBar, liquid, compare, officialOpening, openingTime } from './quality';
+import { validBar, liquid, compare, officialOpening, openingReference } from './quality';
 import { instant, schedule } from './calendar';
 import { beginSchema, type Begin, type Decision, type Snapshot, observationSchema, type SavedObservation, requestSchema, type MarketRequest, type Task, type Identity } from './types';
 
@@ -172,7 +172,7 @@ export class MarketCapture {
         || snapshot.mappingVersion !== observation.mappingVersion || identity.actionVersion !== observation.actionVersion
         || observation.kind !== 'action' && observation.eventAt > acquiredAt) throw new Error('observation provenance mismatch');
       const logicalKey = JSON.stringify([observation.securityId, observation.kind, observation.session, observation.basis,
-        observation.kind === 'daily' ? null : observation.value['id'] ?? observation.eventAt]);
+        observation.kind === 'daily' ? null : observation.kind==='opening' ? [observation.value['t'],observation.value['x'],observation.value['c']] : observation.value['id'] ?? observation.eventAt]);
       return { id: await hash(JSON.stringify([observation.securityId, observation.kind, observation.session, observation.basis, observation.eventAt, observation.value])), logicalKey, securityId: observation.securityId, kind: observation.kind,
         session: observation.session, basis: observation.basis, actionVersion: observation.actionVersion, value: JSON.stringify(observation) };
     }));
@@ -195,26 +195,27 @@ export class MarketCapture {
       .all<{ id: string; acquired_at: number; revision_of: string | null; value: string }>()).results;
     return rows.map(r => ({ ...JSON.parse(r.value), id: r.id, acquiredAt: r.acquired_at, revisionOf: r.revision_of } as SavedObservation));
   }
+  async openingInputs(snapshotId:string,securityIds:string[],session:string,cutoff:number) {
+    return (await this.sql(`SELECT o.id,o.value,p.acquired_at,p.occurrences FROM market_sightings p
+      JOIN market_observations o ON o.id=p.input_id WHERE p.snapshot_id=? AND p.security_id IN (SELECT value FROM json_each(?))
+      AND p.kind='opening' AND p.session=? AND p.acquired_at<=? AND NOT EXISTS(
+        SELECT 1 FROM market_observations n JOIN market_sightings q ON q.input_id=n.id
+        WHERE n.security_id=o.security_id AND n.kind='opening' AND n.session=o.session AND n.basis='raw'
+        AND json_extract(n.value,'$.value.t')=json_extract(o.value,'$.value.t')
+        AND json_extract(n.value,'$.value.x')=json_extract(o.value,'$.value.x')
+        AND json_extract(n.value,'$.value.c')=json_extract(o.value,'$.value.c')
+        AND q.snapshot_id=p.snapshot_id AND q.acquired_at>p.acquired_at AND q.acquired_at<=?) LIMIT 1001`,
+      snapshotId,JSON.stringify(securityIds),session,cutoff,cutoff).all<{id:string;value:string;acquired_at:number;occurrences:number}>()).results;
+  }
   async reference(snapshotId: string, securityId: string, session: string, cutoff = this.clock()) {
     const snapshot = await this.snapshot(snapshotId,0,0);
     const identity = (await this.decision(snapshotId, securityId))?.identity;
     const day = snapshot?.calendar.find(s => s.date === session);
     const venue = identity && venues[identity.primaryVenue];
-    const empty = (status: string) => ({ status, price: null as string | null, eventAt: null as number | null, eventTimestamp: null as string | null, inputIds: [] as string[], qualifyingReceipts: 0, cutoff });
-    if (!day || !identity || !venue) return empty('unknown_primary_venue');
-    const open = instant(session, day.open, 'America/New_York');
-    const rows = (await this.sql(`SELECT o.id,o.value,p.acquired_at,p.occurrences FROM market_sightings p
-      JOIN market_observations o ON o.id=p.input_id WHERE p.snapshot_id=? AND p.security_id=? AND p.kind='opening' AND p.session=? AND p.acquired_at<=?`,
-    snapshotId, securityId, session, cutoff).all<{ id: string; value: string; acquired_at: number; occurrences: number }>()).results;
-    const qualifying = rows.map(r => ({ id: r.id, occurrences: r.occurrences, o: JSON.parse(r.value) as SavedObservation })).filter(({ o }) => officialOpening(o,venue,open));
-    if (!qualifying.length) return empty('missing_reference');
-    const price = qualifying[0]!.o.value['p'] as string;
-    const conflict = qualifying.some(r => compare(r.o.value['p'] as string,price) !== 0);
-    const sorted = qualifying.sort((a,b) => openingTime(a.o)!<openingTime(b.o)! ? -1 : openingTime(a.o)!>openingTime(b.o)! ? 1 : 0);
-    return { ...empty(conflict ? 'conflict' : 'available'),
-      price: conflict ? null : sorted[0]!.o.value['p'] as string,
-      eventAt: conflict ? null : sorted[0]!.o.eventAt, eventTimestamp: conflict ? null : sorted[0]!.o.value['t'] as string,
-      inputIds: [...new Set(sorted.map(r => r.id))], qualifyingReceipts: qualifying.reduce((n,r) => n+r.occurrences,0) };
+    const open = day ? instant(session,day.open,'America/New_York') : undefined;
+    if (!day || !identity || !venue) return openingReference([],venue ?? undefined,open,cutoff);
+    const rows = await this.openingInputs(snapshotId,[securityId],session,cutoff);
+    return openingReference(rows.map(r => ({id:r.id,occurrences:r.occurrences,o:JSON.parse(r.value) as SavedObservation})),venue,open,cutoff);
   }
   async freezeReference(lease: Lease, id: string, securityId: string, session: string, kind: 'initial' | 'revision' = 'initial') {
     const snapshot = await this.snapshot(id,0,0);
