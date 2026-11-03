@@ -1,0 +1,1253 @@
+{
+  "checked_at": "2026-11-03T08:26:46.686169+00:00",
+  "purpose": "Diagnostic retry of all 72 default listed-only ISIN no-matches; does not establish present listing/eligibility",
+  "parameters": {
+    "idType": "ID_ISIN",
+    "exchCode": "US",
+    "includeUnlistedEquities": true
+  },
+  "rows": {
+    "US8523876048": {
+      "data": [
+        {
+          "figi": "BBG0025CGG82",
+          "name": "STAFFING 360 SOLUTIONS INC",
+          "ticker": "STAFQ",
+          "exchCode": "US",
+          "compositeFIGI": "BBG0025CGG82",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG0025CGH08",
+          "securityType2": "Common Stock",
+          "securityDescription": "STAFQ"
+        }
+      ]
+    },
+    "KYG720071599": {
+      "data": [
+        {
+          "figi": "BBG00N0D0PZ6",
+          "name": "X3 HOLDINGS CO LTD-A",
+          "ticker": "XTKG",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00N0D0PZ6",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00N0D0QQ4",
+          "securityType2": "Common Stock",
+          "securityDescription": "XTKG"
+        }
+      ]
+    },
+    "US6556641008": {
+      "data": [
+        {
+          "figi": "BBG000G8N9C6",
+          "name": "NORDSTROM INC",
+          "ticker": "JWN",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000G8N9C6",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S7BDN5",
+          "securityType2": "Common Stock",
+          "securityDescription": "JWN"
+        }
+      ]
+    },
+    "US11125B1026": {
+      "data": [
+        {
+          "figi": "BBG012BF1WY9",
+          "name": "BROAD CAPITAL ACQUISITION CO",
+          "ticker": "BRAC",
+          "exchCode": "US",
+          "compositeFIGI": "BBG012BF1WY9",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG012BF1XS4",
+          "securityType2": "Common Stock",
+          "securityDescription": "BRAC"
+        }
+      ]
+    },
+    "KYG2949D1043": {
+      "data": [
+        {
+          "figi": "BBG01R5ZG945",
+          "name": "DYNAMIX CORP",
+          "ticker": "DYNC",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01R5ZG945",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01R5ZGB22",
+          "securityType2": "Common Stock",
+          "securityDescription": "DYNC"
+        }
+      ]
+    },
+    "US63905A2006": {
+      "data": [
+        {
+          "figi": "BBG000BCLG92",
+          "name": "NATUZZI SPA-SP ADR",
+          "ticker": "NTZ",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000BCLG92",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S6DGN8",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "NTZ"
+        }
+      ]
+    },
+    "US74735M1080": {
+      "data": [
+        {
+          "figi": "BBG004D378N0",
+          "name": "QIWI PLC-SPONSORED ADR",
+          "ticker": "QIWI",
+          "exchCode": "US",
+          "compositeFIGI": "BBG004D378N0",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG004D379D9",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "QIWI"
+        }
+      ]
+    },
+    "US44364H1005": {
+      "data": [
+        {
+          "figi": "BBG0174QTF42",
+          "name": "HUDSON ACQUISITION I CORP",
+          "ticker": "HUDA",
+          "exchCode": "US",
+          "compositeFIGI": "BBG0174QTF42",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG0174QTG77",
+          "securityType2": "Common Stock",
+          "securityDescription": "HUDA"
+        }
+      ]
+    },
+    "IPO00000MDAT": {
+      "error": "Invalid idValue format."
+    },
+    "KYG92Y4F1345": {
+      "warning": "No identifier found."
+    },
+    "US4158641070": {
+      "data": [
+        {
+          "figi": "BBG000BLH3P8",
+          "name": "ENVIRI CORP/US",
+          "ticker": "2660174D",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000BLH3P8",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S5S0V0",
+          "securityType2": "Common Stock",
+          "securityDescription": "2660174D"
+        }
+      ]
+    },
+    "US69269L1044": {
+      "data": [
+        {
+          "figi": "BBG00Y29RP99",
+          "name": "OZON HOLDINGS PLC - ADR",
+          "ticker": "OZON",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00Y29RP99",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00Y29RQ42",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "OZON"
+        }
+      ]
+    },
+    "US68276W6084": {
+      "data": [
+        {
+          "figi": "BBG00K7T3CY7",
+          "name": "META DATA LTD-ADR",
+          "ticker": "AIU",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00K7T3CY7",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00K7T3DN7",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "AIU"
+        }
+      ]
+    },
+    "US92539P1012": {
+      "data": [
+        {
+          "figi": "BBG00P33TCZ8",
+          "name": "VERVE THERAPEUTICS INC",
+          "ticker": "VERV",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00P33TCZ8",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00P33TD13",
+          "securityType2": "Common Stock",
+          "securityDescription": "VERV"
+        }
+      ]
+    },
+    "US4364401012": {
+      "data": [
+        {
+          "figi": "BBG000C3NTN5",
+          "name": "HOLOGIC INC",
+          "ticker": "HOLX",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000C3NTN5",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S6HWB2",
+          "securityType2": "Common Stock",
+          "securityDescription": "HOLX"
+        }
+      ]
+    },
+    "US66611T1088": {
+      "data": [
+        {
+          "figi": "BBG000TW5Y34",
+          "name": "NORTHFIELD BANCORP INC",
+          "ticker": "NFBK",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000TW5Y34",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001T0M0Z2",
+          "securityType2": "Common Stock",
+          "securityDescription": "NFBK"
+        }
+      ]
+    },
+    "US5838405091": {
+      "data": [
+        {
+          "figi": "BBG000V0TN75",
+          "name": "MECHEL-PREF SPON ADR",
+          "ticker": "MTL/P",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000V0TN75",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001T8PH58",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "MTL/P"
+        }
+      ]
+    },
+    "US90187B8046": {
+      "data": [
+        {
+          "figi": "BBG000MG3Y65",
+          "name": "TWO HARBORS INVESTMENT CORP",
+          "ticker": "TWO",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000MG3Y65",
+          "securityType": "REIT",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001T4RH00",
+          "securityType2": "REIT",
+          "securityDescription": "TWO"
+        }
+      ]
+    },
+    "US05478C1053": {
+      "data": [
+        {
+          "figi": "BBG00RPJPN67",
+          "name": "AZEK CO INC/THE",
+          "ticker": "AZEK",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00RPJPN67",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00RP7FY15",
+          "securityType2": "Common Stock",
+          "securityDescription": "AZEK"
+        }
+      ]
+    },
+    "US0185223007": {
+      "data": [
+        {
+          "figi": "BBG000CYW7N5",
+          "name": "ALLETE INC",
+          "ticker": "ALE",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000CYW7N5",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S77110",
+          "securityType2": "Common Stock",
+          "securityDescription": "ALE"
+        }
+      ]
+    },
+    "US92673K1088": {
+      "data": [
+        {
+          "figi": "BBG00YGBK4Q4",
+          "name": "VIGIL NEUROSCIENCE INC",
+          "ticker": "VIGL",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00YGBK4Q4",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00YGBK4R3",
+          "securityType2": "Common Stock",
+          "securityDescription": "VIGL"
+        }
+      ]
+    },
+    "KYG7309R1149": {
+      "data": [
+        {
+          "figi": "BBG01JNSWN22",
+          "name": "QMMM HOLDINGS LTD-A",
+          "ticker": "QMMM",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01JNSWN22",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01JNSWP90",
+          "securityType2": "Common Stock",
+          "securityDescription": "QMMM"
+        }
+      ]
+    },
+    "US1248051021": {
+      "data": [
+        {
+          "figi": "BBG000FQD1Z0",
+          "name": "CBIZ INC",
+          "ticker": "CBZ",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000FQD1Z0",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S8MB55",
+          "securityType2": "Common Stock",
+          "securityDescription": "CBZ"
+        }
+      ]
+    },
+    "US8068821060": {
+      "data": [
+        {
+          "figi": "BBG000BL18V7",
+          "name": "RADIUS RECYCLING INC-A",
+          "ticker": "RDUS",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000BL18V7",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S7H0J2",
+          "securityType2": "Common Stock",
+          "securityDescription": "RDUS"
+        }
+      ]
+    },
+    "KYG7T16G1039": {
+      "data": [
+        {
+          "figi": "BBG000G3YP84",
+          "name": "SAPIENS INTERNATIONAL CORP",
+          "ticker": "SPNS",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000G3YP84",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S86JQ3",
+          "securityType2": "Common Stock",
+          "securityDescription": "SPNS"
+        }
+      ]
+    },
+    "US86737U1025": {
+      "data": [
+        {
+          "figi": "BBG000HNQT26",
+          "name": "SUNLINK HEALTH SYSTEMS INC",
+          "ticker": "SSY",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000HNQT26",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SF9S57",
+          "securityType2": "Common Stock",
+          "securityDescription": "SSY"
+        }
+      ]
+    },
+    "US03890D1081": {
+      "data": [
+        {
+          "figi": "BBG000R33LG6",
+          "name": "ARAVIVE INC",
+          "ticker": "ARAV",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000R33LG6",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001T922D5",
+          "securityType2": "Common Stock",
+          "securityDescription": "ARAV"
+        }
+      ]
+    },
+    "KYG039591063": {
+      "data": [
+        {
+          "figi": "BBG013B5VNH5",
+          "name": "ANTHEMIS DIGITAL ACQUISITION",
+          "ticker": "ADAL",
+          "exchCode": "US",
+          "compositeFIGI": "BBG013B5VNH5",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG013B5VPG1",
+          "securityType2": "Common Stock",
+          "securityDescription": "ADAL"
+        }
+      ]
+    },
+    "US8765685024": {
+      "data": [
+        {
+          "figi": "BBG000PVGDH9",
+          "name": "TATA MOTORS LTD-SPON ADR",
+          "ticker": "TTM",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000PVGDH9",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S5W4B9",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "TTM"
+        }
+      ]
+    },
+    "US87250W3016": {
+      "data": [
+        {
+          "figi": "BBG004P486T2",
+          "name": "BAIYU HOLDINGS INC",
+          "ticker": "BYU",
+          "exchCode": "US",
+          "compositeFIGI": "BBG004P486T2",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG004P486V9",
+          "securityType2": "Common Stock",
+          "securityDescription": "BYU"
+        }
+      ]
+    },
+    "US82452L5003": {
+      "data": [
+        {
+          "figi": "BBG00FHYBQD9",
+          "name": "SHIFTPIXY INC",
+          "ticker": "PIXY",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00FHYBQD9",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00FHYBQF7",
+          "securityType2": "Common Stock",
+          "securityDescription": "PIXY"
+        }
+      ]
+    },
+    "IPO00000OURA": {
+      "error": "Invalid idValue format."
+    },
+    "US00777C2035": {
+      "data": [
+        {
+          "figi": "BBG012BFPRC8",
+          "name": "ADVANCED HEALTH INTELLIGENCE",
+          "ticker": "AHI",
+          "exchCode": "US",
+          "compositeFIGI": "BBG012BFPRC8",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG012BFPS72",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "AHI"
+        }
+      ]
+    },
+    "US53815P1084": {
+      "data": [
+        {
+          "figi": "BBG000BB4HM6",
+          "name": "LIVERAMP HOLDINGS INC",
+          "ticker": "RAMP",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000BB4HM6",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S5NCJ3",
+          "securityType2": "Common Stock",
+          "securityDescription": "RAMP"
+        }
+      ]
+    },
+    "IL0011334468": {
+      "data": [
+        {
+          "figi": "BBG006Q52QV2",
+          "name": "CYBERARK SOFTWARE LTD/ISRAEL",
+          "ticker": "CYBR",
+          "exchCode": "US",
+          "compositeFIGI": "BBG006Q52QV2",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG006Q52QW1",
+          "securityType2": "Common Stock",
+          "securityDescription": "CYBR"
+        }
+      ]
+    },
+    "US58471G5080": {
+      "data": [
+        {
+          "figi": "BBG008QPWDD0",
+          "name": "XYLO TECHNOLOGIES LTD",
+          "ticker": "XYLO",
+          "exchCode": "US",
+          "compositeFIGI": "BBG008QPWDD0",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG008QPWFK7",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "XYLO"
+        }
+      ]
+    },
+    "US91864C1071": {
+      "data": [
+        {
+          "figi": "BBG00ZZPCP09",
+          "name": "BARINTHUS BIOTHERAPEUTICS PL",
+          "ticker": "BRNS",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00ZZPCP09",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00ZZPCPV5",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "BRNS"
+        }
+      ]
+    },
+    "US04634X2027": {
+      "data": [
+        {
+          "figi": "BBG00W7FG4V8",
+          "name": "ASTRA SPACE INC",
+          "ticker": "ASTR",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00W7FG4V8",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00W7FG4W7",
+          "securityType2": "Common Stock",
+          "securityDescription": "ASTR"
+        }
+      ]
+    },
+    "US04522R3093": {
+      "data": [
+        {
+          "figi": "BBG00KG283R9",
+          "name": "ASLAN PHARMACEUTICALS LT-ADR",
+          "ticker": "ASLN",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00KG283R9",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00KG284G9",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "ASLN"
+        }
+      ]
+    },
+    "BMG9001E1443": {
+      "warning": "No identifier found."
+    },
+    "US68236P2065": {
+      "data": [
+        {
+          "figi": "BBG000BX50F2",
+          "name": "ONCTERNAL THERAPEUTICS INC",
+          "ticker": "ONCT",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000BX50F2",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SCTS61",
+          "securityType2": "Common Stock",
+          "securityDescription": "ONCT"
+        }
+      ]
+    },
+    "US44951Y2019": {
+      "data": [
+        {
+          "figi": "BBG00Y2JHBG1",
+          "name": "HYZON MOTORS INC",
+          "ticker": "HYZN",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00Y2JHBG1",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00Y2JHBH0",
+          "securityType2": "Common Stock",
+          "securityDescription": "HYZN"
+        }
+      ]
+    },
+    "US56804T3041": {
+      "data": [
+        {
+          "figi": "BBG001M6NQK4",
+          "name": "MARIN SOFTWARE INC",
+          "ticker": "MRINQ",
+          "exchCode": "US",
+          "compositeFIGI": "BBG001M6NQK4",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001V10GH6",
+          "securityType2": "Common Stock",
+          "securityDescription": "MRINQ"
+        }
+      ]
+    },
+    "KYG127291105": {
+      "data": [
+        {
+          "figi": "BBG01GRB2FB1",
+          "name": "BOWEN ACQUISITION CORP",
+          "ticker": "BOWN",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01GRB2FB1",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01GRB2G83",
+          "securityType2": "Common Stock",
+          "securityDescription": "BOWN"
+        }
+      ]
+    },
+    "US0537348775": {
+      "data": [
+        {
+          "figi": "BBG000QCSTC7",
+          "name": "AVINGER INC",
+          "ticker": "AVGR",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000QCSTC7",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001T6V7N7",
+          "securityType2": "Common Stock",
+          "securityDescription": "AVGR"
+        }
+      ]
+    },
+    "US88427A1079": {
+      "data": [
+        {
+          "figi": "BBG00Z14GXB0",
+          "name": "THIRD HARMONIC BIO INC",
+          "ticker": "THRD",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00Z14GXB0",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00Z14GXC9",
+          "securityType2": "Common Stock",
+          "securityDescription": "THRD"
+        }
+      ]
+    },
+    "US5838406081": {
+      "data": [
+        {
+          "figi": "BBG000Q9WGP3",
+          "name": "MECHEL PJSC-SPONSORED ADR",
+          "ticker": "MTL",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000Q9WGP3",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SMHBM1",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "MTL"
+        }
+      ]
+    },
+    "US98923K1034": {
+      "data": [
+        {
+          "figi": "BBG010J22GT4",
+          "name": "ZEEKR INTELLIGENT TECHNO-ADR",
+          "ticker": "ZK",
+          "exchCode": "US",
+          "compositeFIGI": "BBG010J22GT4",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG010J22GV1",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "ZK"
+        }
+      ]
+    },
+    "US5949728530": {
+      "warning": "No identifier found."
+    },
+    "VGG5146R1073": {
+      "data": [
+        {
+          "figi": "BBG01WNMLL77",
+          "name": "JM GROUP LTD",
+          "ticker": "JMG",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01WNMLL77",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01WNMLM57",
+          "securityType2": "Common Stock",
+          "securityDescription": "JMG"
+        }
+      ]
+    },
+    "US93465C1062": {
+      "data": [
+        {
+          "figi": "BBG018342K11",
+          "name": "WARRANTEE INC-ADR",
+          "ticker": "WRNT",
+          "exchCode": "US",
+          "compositeFIGI": "BBG018342K11",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG018342LL7",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "WRNT"
+        }
+      ]
+    },
+    "KYG8807B1068": {
+      "data": [
+        {
+          "figi": "BBG004HK6YX1",
+          "name": "THERAVANCE BIOPHARMA INC",
+          "ticker": "TBPH",
+          "exchCode": "US",
+          "compositeFIGI": "BBG004HK6YX1",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG004HK6YY0",
+          "securityType2": "Common Stock",
+          "securityDescription": "TBPH"
+        }
+      ]
+    },
+    "US0305061097": {
+      "data": [
+        {
+          "figi": "BBG000BBX657",
+          "name": "AMERICAN WOODMARK CORP",
+          "ticker": "AMWD",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000BBX657",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S5NQ57",
+          "securityType2": "Common Stock",
+          "securityDescription": "AMWD"
+        }
+      ]
+    },
+    "KYG285241173": {
+      "data": [
+        {
+          "figi": "BBG01LNVG910",
+          "name": "DT CLOUD ACQUISITION CORP",
+          "ticker": "DYCQ",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01LNVG910",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01LNVG9Y4",
+          "securityType2": "Common Stock",
+          "securityDescription": "DYCQ"
+        }
+      ]
+    },
+    "KY07323B1007": {
+      "data": [
+        {
+          "figi": "BBG01KT6FX00",
+          "name": "BAYVIEW ACQUISITION CORP-A",
+          "ticker": "BAYA",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01KT6FX00",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01KT6FXV6",
+          "securityType2": "Common Stock",
+          "securityDescription": "BAYA"
+        }
+      ]
+    },
+    "IE00BDGMC594": {
+      "data": [
+        {
+          "figi": "BBG00FPFX9W4",
+          "name": "AVADEL PHARMACEUTICALS LTD",
+          "ticker": "AVDL",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00FPFX9W4",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SD3F74",
+          "securityType2": "Common Stock",
+          "securityDescription": "AVDL"
+        }
+      ]
+    },
+    "KY67190B1043": {
+      "data": [
+        {
+          "figi": "BBG01G2R5D61",
+          "name": "OAK WOODS ACQUISITION CORP-A",
+          "ticker": "OAKU",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01G2R5D61",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01G2R5D70",
+          "securityType2": "Common Stock",
+          "securityDescription": "OAKU"
+        }
+      ]
+    },
+    "US57064N2018": {
+      "data": [
+        {
+          "figi": "BBG00X7WQC22",
+          "name": "MARKFORGED HOLDING CORP",
+          "ticker": "MKFG",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00X7WQC22",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00X7WQC31",
+          "securityType2": "Common Stock",
+          "securityDescription": "MKFG"
+        }
+      ]
+    },
+    "US4811161011": {
+      "data": [
+        {
+          "figi": "BBG0044BWGZ3",
+          "name": "JOUNCE THERAPEUTICS INC",
+          "ticker": "JNCE",
+          "exchCode": "US",
+          "compositeFIGI": "BBG0044BWGZ3",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG0044BWH09",
+          "securityType2": "Common Stock",
+          "securityDescription": "JNCE"
+        }
+      ]
+    },
+    "US00445F1093": {
+      "data": [
+        {
+          "figi": "BBG000DQGMR2",
+          "name": "ACERAGEN INC",
+          "ticker": "ACGN",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000DQGMR2",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001S8MP27",
+          "securityType2": "Common Stock",
+          "securityDescription": "ACGN"
+        }
+      ]
+    },
+    "US6837501039": {
+      "data": [
+        {
+          "figi": "BBG000R5GQ30",
+          "name": "OPIANT PHARMACEUTICALS INC",
+          "ticker": "OPNT",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000R5GQ30",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001ST4X51",
+          "securityType2": "Common Stock",
+          "securityDescription": "OPNT"
+        }
+      ]
+    },
+    "US5168062058": {
+      "data": [
+        {
+          "figi": "BBG000DZCFX4",
+          "name": "VITAL ENERGY INC",
+          "ticker": "VTLE",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000DZCFX4",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001T24DQ0",
+          "securityType2": "Common Stock",
+          "securityDescription": "VTLE"
+        }
+      ]
+    },
+    "US6993743029": {
+      "data": [
+        {
+          "figi": "BBG000R36RQ9",
+          "name": "PARATEK PHARMACEUTICALS INC",
+          "ticker": "PRTK",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000R36RQ9",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SQHLP7",
+          "securityType2": "Common Stock",
+          "securityDescription": "PRTK"
+        }
+      ]
+    },
+    "US03828A1016": {
+      "data": [
+        {
+          "figi": "BBG000DD0489",
+          "name": "APPLIED THERAPEUTICS INC",
+          "ticker": "APLT",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000DD0489",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SMJMY2",
+          "securityType2": "Common Stock",
+          "securityDescription": "APLT"
+        }
+      ]
+    },
+    "US6378701063": {
+      "data": [
+        {
+          "figi": "BBG008417VN4",
+          "name": "NATIONAL STORAGE AFFILIATES",
+          "ticker": "NSA",
+          "exchCode": "US",
+          "compositeFIGI": "BBG008417VN4",
+          "securityType": "REIT",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG008417VP2",
+          "securityType2": "REIT",
+          "securityDescription": "NSA"
+        }
+      ]
+    },
+    "US83089J1088": {
+      "data": [
+        {
+          "figi": "BBG00ZS44LN7",
+          "name": "SKYWATER TECHNOLOGY INC",
+          "ticker": "SKYT",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00ZS44LN7",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00ZS44MH2",
+          "securityType2": "Common Stock",
+          "securityDescription": "SKYT"
+        }
+      ]
+    },
+    "US37185R4065": {
+      "data": [
+        {
+          "figi": "BBG000P9PKY3",
+          "name": "GENETIC TECH LTD-SP ADR",
+          "ticker": "GENE",
+          "exchCode": "US",
+          "compositeFIGI": "BBG000P9PKY3",
+          "securityType": "ADR",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG001SK4X23",
+          "securityType2": "Depositary Receipt",
+          "securityDescription": "GENE"
+        }
+      ]
+    },
+    "US4833792025": {
+      "data": [
+        {
+          "figi": "BBG00J7STCT0",
+          "name": "KALEYRA INC",
+          "ticker": "KLR",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00J7STCT0",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00J7STCX5",
+          "securityType2": "Common Stock",
+          "securityDescription": "KLR"
+        }
+      ]
+    },
+    "US71531R1095": {
+      "data": [
+        {
+          "figi": "BBG00VQPGRL7",
+          "name": "PERSHING SQUARE TONTINE -A",
+          "ticker": "PSTH",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00VQPGRL7",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00VY21Y49",
+          "securityType2": "Common Stock",
+          "securityDescription": "PSTH"
+        }
+      ]
+    },
+    "US68622D2053": {
+      "data": [
+        {
+          "figi": "BBG00VR487K7",
+          "name": "ORIGIN MATERIALS INC",
+          "ticker": "ORGN",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00VR487K7",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00VR487L6",
+          "securityType2": "Common Stock",
+          "securityDescription": "ORGN"
+        }
+      ]
+    },
+    "US72016P1057": {
+      "data": [
+        {
+          "figi": "BBG00YJ7NBQ1",
+          "name": "PIEDMONT LITHIUM INC",
+          "ticker": "PLL",
+          "exchCode": "US",
+          "compositeFIGI": "BBG00YJ7NBQ1",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG00YJ7ND87",
+          "securityType2": "Common Stock",
+          "securityDescription": "PLL"
+        }
+      ]
+    },
+    "US49177J1025": {
+      "data": [
+        {
+          "figi": "BBG01C79X561",
+          "name": "KENVUE INC",
+          "ticker": "KVUE",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01C79X561",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01C79X614",
+          "securityType2": "Common Stock",
+          "securityDescription": "KVUE"
+        },
+        {
+          "figi": "BBG01HP3S202",
+          "name": "KENVUE INC-W/I",
+          "ticker": "KVUE-W",
+          "exchCode": "US",
+          "compositeFIGI": "BBG01HP3S202",
+          "securityType": "Common Stock",
+          "marketSector": "Equity",
+          "shareClassFIGI": "BBG01C79X614",
+          "securityType2": "Common Stock",
+          "securityDescription": "KVUE-W"
+        }
+      ]
+    }
+  },
+  "market_diagnostic": {
+    "http_status": 200,
+    "feed": "sip",
+    "adjustment": "raw",
+    "asof": "2026-11-03",
+    "sessions": [
+      "2026-06-26",
+      "2026-06-29",
+      "2026-06-30",
+      "2026-07-01",
+      "2026-07-02",
+      "2026-07-06",
+      "2026-07-07",
+      "2026-07-08",
+      "2026-07-09",
+      "2026-07-10",
+      "2026-07-13",
+      "2026-07-14",
+      "2026-07-15",
+      "2026-07-16",
+      "2026-07-17",
+      "2026-07-20",
+      "2026-07-21",
+      "2026-07-22",
+      "2026-07-23",
+      "2026-07-24",
+      "2026-07-27",
+      "2026-07-28",
+      "2026-07-29",
+      "2026-07-30",
+      "2026-07-31",
+      "2026-08-03",
+      "2026-08-04",
+      "2026-08-05",
+      "2026-08-06",
+      "2026-08-07",
+      "2026-08-10",
+      "2026-08-11",
+      "2026-08-12",
+      "2026-08-13",
+      "2026-08-14",
+      "2026-08-17",
+      "2026-08-18",
+      "2026-08-19",
+      "2026-08-20",
+      "2026-08-21",
+      "2026-08-24",
+      "2026-08-25",
+      "2026-08-26",
+      "2026-08-27",
+      "2026-08-28",
+      "2026-08-31",
+      "2026-09-01",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-04",
+      "2026-09-08",
+      "2026-09-09",
+      "2026-09-10",
+      "2026-09-11",
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-18",
+      "2026-09-21",
+      "2026-09-22",
+      "2026-09-23",
+      "2026-09-24",
+      "2026-09-25",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01",
+      "2026-10-02",
+      "2026-10-05",
+      "2026-10-06",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14",
+      "2026-10-15",
+      "2026-10-16",
+      "2026-10-19",
+      "2026-10-20",
+      "2026-10-21",
+      "2026-10-22",
+      "2026-10-23",
+      "2026-10-26",
+      "2026-10-27",
+      "2026-10-28",
+      "2026-10-29",
+      "2026-10-30",
+      "2026-11-02"
+    ],
+    "has_next_page": false,
+    "symbols": {
+      "BOWN": {
+        "provider_asset": {
+          "id": "483a8a39-87d6-4df7-9de4-a2ec4deefa11",
+          "symbol": "BOWN",
+          "name": "Bowen Acquisition Corp Ordinary Shares",
+          "exchange": "NASDAQ",
+          "status": "active",
+          "tradable": true
+        },
+        "bar_count": 12,
+        "first": "2026-06-26T04:00:00Z",
+        "last": "2026-07-14T04:00:00Z",
+        "has_previous_session": false
+      },
+      "PSTH": {
+        "provider_asset": {
+          "id": "33d97db5-668b-4e3b-9cac-8e9d382a8fe4",
+          "symbol": "PSTH",
+          "name": "Pershing Square Tontine Holdings, Ltd.",
+          "exchange": "NYSE",
+          "status": "inactive",
+          "tradable": false
+        },
+        "bar_count": 0,
+        "first": null,
+        "last": null,
+        "has_previous_session": false
+      },
+      "RDUS": {
+        "provider_asset": {
+          "id": "c5431202-d178-4029-be34-f7d06b7a28ff",
+          "symbol": "RDUS",
+          "name": "Radius Recycling, Inc. Class A Common Stock",
+          "exchange": "NASDAQ",
+          "status": "inactive",
+          "tradable": false
+        },
+        "bar_count": 0,
+        "first": null,
+        "last": null,
+        "has_previous_session": false
+      }
+    }
+  }
+}

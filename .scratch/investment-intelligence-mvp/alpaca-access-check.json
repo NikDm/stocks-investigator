@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-11-03T07:46:34.088938+00:00",
+  "scope": "read-only metadata and bounded market-data samples; no account or order endpoints",
+  "checks": {
+    "historical_sip_daily": {
+      "http_status": 200,
+      "parameters": {
+        "symbols": "AAPL,MSFT,STN,UFI,JZ",
+        "timeframe": "1Day",
+        "start": "2026-10-26T00:00:00Z",
+        "end": "2026-10-31T00:00:00Z",
+        "feed": "sip",
+        "adjustment": "raw",
+        "limit": 1000
+      },
+      "counts": {
+        "UFI": 5,
+        "AAPL": 5,
+        "JZ": 5,
+        "MSFT": 5,
+        "STN": 5
+      },
+      "timestamps": {
+        "UFI": {
+          "first": "2026-10-26T04:00:00Z",
+          "last": "2026-10-30T04:00:00Z"
+        },
+        "AAPL": {
+          "first": "2026-10-26T04:00:00Z",
+          "last": "2026-10-30T04:00:00Z"
+        },
+        "JZ": {
+          "first": "2026-10-26T04:00:00Z",
+          "last": "2026-10-30T04:00:00Z"
+        },
+        "MSFT": {
+          "first": "2026-10-26T04:00:00Z",
+          "last": "2026-10-30T04:00:00Z"
+        },
+        "STN": {
+          "first": "2026-10-26T04:00:00Z",
+          "last": "2026-10-30T04:00:00Z"
+        }
+      },
+      "has_next_page": false
+    },
+    "historical_sip_premarket": {
+      "http_status": 200,
+      "parameters": {
+        "symbols": "AAPL,MSFT",
+        "timeframe": "1Min",
+        "start": "2026-10-30T08:00:00Z",
+        "end": "2026-10-30T13:30:00Z",
+        "feed": "sip",
+        "adjustment": "raw",
+        "limit": 1000
+      },
+      "counts": {
+        "AAPL": 325,
+        "MSFT": 260
+      },
+      "timestamps": {
+        "AAPL": {
+          "first": "2026-10-30T08:00:00Z",
+          "last": "2026-10-30T13:30:00Z"
+        },
+        "MSFT": {
+          "first": "2026-10-30T08:00:00Z",
+          "last": "2026-10-30T13:30:00Z"
+        }
+      },
+      "has_next_page": false
+    },
+    "paper_calendar": {
+      "http_status": 200,
+      "parameters": {
+        "start": "2026-11-02",
+        "end": "2026-11-06"
+      },
+      "count": 5,
+      "dates": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ]
+    }
+  }
+}

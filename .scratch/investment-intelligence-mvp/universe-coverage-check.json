@@ -1,0 +1,929 @@
+{
+  "checked_at": "2026-11-03T08:28:02.906832+00:00",
+  "scope": "read-only public instrument identities and coverage diagnostics; no account/order calls or saved price/volume values",
+  "sources": {
+    "broker": "https://live.trading212.com/api/v0/equity/metadata/instruments",
+    "broker_exchanges": "https://live.trading212.com/api/v0/equity/metadata/exchanges",
+    "alpaca_assets": "https://paper-api.alpaca.markets/v2/assets",
+    "openfigi": "https://api.openfigi.com/v3/mapping",
+    "mapping_parameters": {
+      "idType": "ID_ISIN",
+      "exchCode": "US",
+      "includeUnlistedEquities": false
+    },
+    "history": "https://data.alpaca.markets/v2/stocks/bars"
+  },
+  "limitations": [
+    "Broker catalogue presence does not prove order executability.",
+    "ISIN to US FIGI is a security identity; Alpaca asset symbol joins do not independently assert an ISIN match.",
+    "All US-schedule STOCK records retained, including funds, unresolved identities and inactive provider symbols; final eligibility awaits ticket 02.",
+    "Observed after the 08:00 Europe/Zagreb deadline; pre-deadline measurement moved by user to issue 05."
+  ],
+  "summary": {
+    "provider_symbol_isin_conflicts": {},
+    "catalogue_instruments": 17237,
+    "catalogue_types": {
+      "STOCK": 10515,
+      "ETF": 6702,
+      "WARRANT": 20
+    },
+    "stock_exchange_counts": {
+      "NYSE": 2018,
+      "Gettex": 1558,
+      "London Stock Exchange AIM": 419,
+      "NASDAQ": 3060,
+      "Toronto Stock Exchange": 547,
+      "London Stock Exchange": 570,
+      "Euronext Paris": 371,
+      "Euronext Lisbon": 28,
+      "Deutsche B\u00f6rse Xetra": 632,
+      "OTC Markets": 782,
+      "SIX Swiss Exchange": 134,
+      "Bolsa de Madrid": 162,
+      "Euronext Brussels": 67,
+      "Wiener B\u00f6rse": 77,
+      "Euronext Amsterdam": 90
+    },
+    "us_schedule_stock_inputs": 5078,
+    "us_schedule_without_us_suffix": [
+      "YUMC",
+      "TPR_EQ_US",
+      "ELF_EQ_US",
+      "LFUS_EQ_US"
+    ],
+    "mapping_status": {
+      "unique_figi_with_asset": 4990,
+      "unresolved_figi": 72,
+      "unique_figi_without_asset": 14,
+      "ambiguous_figi": 2
+    },
+    "security_types": {
+      "Common Stock": 4499,
+      "ADR": 320,
+      "REIT": 166,
+      "unresolved": 74,
+      "Royalty Trst": 6,
+      "Closed-End Fund": 5,
+      "Unit": 2,
+      "NY Reg Shrs": 4,
+      "MLP": 1,
+      "Ltd Part": 1
+    },
+    "provider_asset_status": {
+      "active": 4989,
+      "inactive": 1
+    },
+    "provider_asset_exchanges": {
+      "NYSE": 1779,
+      "NASDAQ": 3001,
+      "AMEX": 206,
+      "BATS": 1,
+      "TXSE": 3
+    },
+    "rows_with_previous_session": 4989,
+    "rows_with_full_90_sessions": 4917,
+    "history_unique_symbols": 5004,
+    "history_requests": 80,
+    "history_http_statuses": {
+      "200": 79,
+      "400": 1
+    },
+    "history_truncated_batches": 0,
+    "identity_resolution_status": {
+      "listed_unique": 5004,
+      "unlisted_retry_unique": 66,
+      "no_identity": 5,
+      "ambiguous": 3
+    },
+    "common_stock": {
+      "identified": 4499,
+      "with_provider_asset": 4487,
+      "with_active_provider_asset": 4486,
+      "with_previous_session": 4486,
+      "with_full_90_sessions": 4424
+    }
+  },
+  "history_parameters": {
+    "started_at": "2026-11-03T08:11:40.852703+00:00",
+    "sessions": [
+      "2026-06-26",
+      "2026-06-29",
+      "2026-06-30",
+      "2026-07-01",
+      "2026-07-02",
+      "2026-07-06",
+      "2026-07-07",
+      "2026-07-08",
+      "2026-07-09",
+      "2026-07-10",
+      "2026-07-13",
+      "2026-07-14",
+      "2026-07-15",
+      "2026-07-16",
+      "2026-07-17",
+      "2026-07-20",
+      "2026-07-21",
+      "2026-07-22",
+      "2026-07-23",
+      "2026-07-24",
+      "2026-07-27",
+      "2026-07-28",
+      "2026-07-29",
+      "2026-07-30",
+      "2026-07-31",
+      "2026-08-03",
+      "2026-08-04",
+      "2026-08-05",
+      "2026-08-06",
+      "2026-08-07",
+      "2026-08-10",
+      "2026-08-11",
+      "2026-08-12",
+      "2026-08-13",
+      "2026-08-14",
+      "2026-08-17",
+      "2026-08-18",
+      "2026-08-19",
+      "2026-08-20",
+      "2026-08-21",
+      "2026-08-24",
+      "2026-08-25",
+      "2026-08-26",
+      "2026-08-27",
+      "2026-08-28",
+      "2026-08-31",
+      "2026-09-01",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-04",
+      "2026-09-08",
+      "2026-09-09",
+      "2026-09-10",
+      "2026-09-11",
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-18",
+      "2026-09-21",
+      "2026-09-22",
+      "2026-09-23",
+      "2026-09-24",
+      "2026-09-25",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01",
+      "2026-10-02",
+      "2026-10-05",
+      "2026-10-06",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14",
+      "2026-10-15",
+      "2026-10-16",
+      "2026-10-19",
+      "2026-10-20",
+      "2026-10-21",
+      "2026-10-22",
+      "2026-10-23",
+      "2026-10-26",
+      "2026-10-27",
+      "2026-10-28",
+      "2026-10-29",
+      "2026-10-30",
+      "2026-11-02"
+    ],
+    "feed": "sip",
+    "adjustment": "raw",
+    "asof": "2026-11-03"
+  },
+  "history_batches": [
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:42.375916+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:44.125097+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:46.132668+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:48.169759+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:50.149678+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:52.125180+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:54.109415+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:56.067944+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:11:58.162492+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:00.583975+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:02.488246+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:04.395122+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:06.210424+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:08.242344+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:10.337238+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:12.308537+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:14.127154+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:16.025182+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:17.968127+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:18.828732+00:00",
+      "truncated": false,
+      "symbol_count": 2
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:50.896342+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:52.745907+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:12:54.502901+00:00",
+      "truncated": false,
+      "symbol_count": 67
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:13:26.394460+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:13:27.967862+00:00",
+      "truncated": false,
+      "symbol_count": 37
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:14:00.146230+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:14:01.874792+00:00",
+      "truncated": false,
+      "symbol_count": 38
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:14:34.397163+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:14:36.036493+00:00",
+      "truncated": false,
+      "symbol_count": 29
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:15:08.464180+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:15:10.136639+00:00",
+      "truncated": false,
+      "symbol_count": 36
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:15:42.825367+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:15:44.275664+00:00",
+      "truncated": false,
+      "symbol_count": 28
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:16:16.355668+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:16:18.026686+00:00",
+      "truncated": false,
+      "symbol_count": 40
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:16:50.230449+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:16:51.852553+00:00",
+      "truncated": false,
+      "symbol_count": 36
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:17:23.957427+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:17:25.406515+00:00",
+      "truncated": false,
+      "symbol_count": 28
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:17:57.496627+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:17:58.836126+00:00",
+      "truncated": false,
+      "symbol_count": 35
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:18:31.429297+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:18:33.025907+00:00",
+      "truncated": false,
+      "symbol_count": 26
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:19:05.237751+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:19:06.781887+00:00",
+      "truncated": false,
+      "symbol_count": 40
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:19:38.748216+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:19:40.207877+00:00",
+      "truncated": false,
+      "symbol_count": 30
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:20:12.437683+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:20:13.774496+00:00",
+      "truncated": false,
+      "symbol_count": 28
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:20:45.960890+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:20:48.268258+00:00",
+      "truncated": false,
+      "symbol_count": 40
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:21:20.641020+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:21:22.082399+00:00",
+      "truncated": false,
+      "symbol_count": 36
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:21:54.334820+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:21:55.557924+00:00",
+      "truncated": false,
+      "symbol_count": 17
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:22:27.913874+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:22:29.542049+00:00",
+      "truncated": false,
+      "symbol_count": 46
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:23:01.589532+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:23:02.937522+00:00",
+      "truncated": false,
+      "symbol_count": 28
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:23:34.935539+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:23:36.391622+00:00",
+      "truncated": false,
+      "symbol_count": 34
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:24:08.631075+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:24:09.962445+00:00",
+      "truncated": false,
+      "symbol_count": 27
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:24:42.144686+00:00",
+      "truncated": false,
+      "symbol_count": 100
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:24:43.483139+00:00",
+      "truncated": false,
+      "symbol_count": 27
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:25:15.169812+00:00",
+      "truncated": false,
+      "symbol_count": 35
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:13.616772+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:14.432757+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:15.146806+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:15.867727+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:16.581612+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:17.296712+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:18.007709+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:18.721231+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:19.433368+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:20.143233+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        400
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:20.854966+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:21.580569+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:22.292142+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    },
+    {
+      "statuses": [
+        200
+      ],
+      "pages": 1,
+      "retrieved_at": "2026-11-03T08:26:23.113763+00:00",
+      "truncated": false,
+      "symbol_count": 1
+    }
+  ],
+  "rows_file": "universe-coverage-rows.jsonl",
+  "row_count": 5078,
+  "rows_sha256": "d5c9d6d6210c8a05d8d5f4889ac9c8d071c322a4f9a5e028280dda04db5bbc0d"
+}

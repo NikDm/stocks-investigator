@@ -1,0 +1,46 @@
+{
+  "checked_at": "2026-11-02T21:47:33.886188+00:00",
+  "environment": "live",
+  "endpoints": {
+    "instruments": {
+      "http_status": 200,
+      "count": 17237,
+      "is_array": true,
+      "types": {
+        "STOCK": 10515,
+        "ETF": 6702,
+        "WARRANT": 20
+      },
+      "us_suffix_stock_count": 5858,
+      "us_suffix_stocks_missing_isin": 0,
+      "sample": [
+        {
+          "ticker": "STN_US_EQ",
+          "name": "Stantec",
+          "isin": "CA85472N1096",
+          "currencyCode": "USD",
+          "workingScheduleId": 56
+        },
+        {
+          "ticker": "UFI_US_EQ",
+          "name": "Unifi",
+          "isin": "US9046772003",
+          "currencyCode": "USD",
+          "workingScheduleId": 56
+        },
+        {
+          "ticker": "JZ_US_EQ",
+          "name": "Jianzhi Education Technology",
+          "isin": "US47737L4014",
+          "currencyCode": "USD",
+          "workingScheduleId": 110
+        }
+      ]
+    },
+    "exchanges": {
+      "http_status": 200,
+      "count": 17,
+      "is_array": true
+    }
+  }
+}

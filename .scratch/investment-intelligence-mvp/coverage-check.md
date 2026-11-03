@@ -1,0 +1,72 @@
+# Full-universe practical checks — 2026-11-03
+
+Research evidence for [issue 01](issues/01-data-feasibility.md). Read-only API requests used existing ignored credentials; no trading/account/portfolio endpoints, subscriptions, provisioning or application adapters. The local clock was already after 08:00 Europe/Zagreb when these checks began. **This is not a pre-deadline delivery measurement.** Counts describe a dated catalogue, not order executability or future completeness.
+
+## Universe construction
+
+The live Trading 212 catalogue returned 17,237 instruments, including 10,515 STOCK records. Join each STOCK's `workingScheduleId` to the metadata exchange schedules before filtering. There are 5,078 USD STOCK records assigned to NYSE/NASDAQ schedules. The older 5,858 `_US_EQ` count includes 782 OTC records, one Vienna record and one Xetra record, and misses four US-schedule records: `YUMC`, `TPR_EQ_US`, `ELF_EQ_US`, `LFUS_EQ_US`. Thus neither suffix stripping nor the larger count defines the eligible universe. No handpicked replacement universe is proposed. [Trading 212 metadata reference](https://docs.trading212.com/api/instruments/instruments).
+
+Use broker ticker plus dated ISIN and schedule/exchange as the broker-side identity. Resolve the ISIN using OpenFIGI with `exchCode=US`; retain composite and share-class FIGIs, security type, result cardinality and lookup date. The public mapping API accepts ten jobs per request, 25 requests/minute; no key/account was created. A unique US composite match supplies an external security identity, but does not on its own prove that an Alpaca symbol identifies that same security. Match its asset metadata and dated action/name history; quarantine unresolved or conflicting results. The mapping API excludes unlisted equities by default; a no-match is unresolved, not proof the broker record is invalid. [OpenFIGI documentation](https://www.openfigi.com/api/documentation).
+
+### Final full-universe results
+
+All **5,078** exchange-derived US STOCK inputs were submitted for ISIN mapping, including the four nonstandard broker tickers. There are no omitted input rows. [Summary/parameters](universe-coverage-check.json), [all 5,078 identity/coverage rows](universe-coverage-rows.jsonl), [unlisted retry](unlisted-identity-check.json) and [session/action/auction samples](market-semantics-check.json) retain the audit evidence. The summary includes the row file's SHA-256. No price/volume values or credentials are in these artifacts.
+
+| Listed-only mapping result | Broker rows |
+| --- | ---: |
+| Unique US FIGI, symbol joins Alpaca asset | 4,990 |
+| Unique US FIGI, no matching Alpaca asset | 14 |
+| No listed-only FIGI match | 72 |
+| Ambiguous FIGI matches | 2 |
+| Total | 5,078 |
+
+Retrying all 72 no-matches with `includeUnlistedEquities=true` recovers 67 (66 unique, one ambiguous); five still have no identity. Overall, 5,070 inputs have a unique external identity, three remain ambiguous and five unidentified. This does not make the 66 unlisted-only matches currently eligible: listing status needs reconciliation. Only three of their unique symbol candidates appear in Alpaca assets; a bounded 90-session SIP query returns no bars for those three. Preserve the original listed-only outcome alongside the retry, rather than treating a broader lookup as evidence of current listing.
+
+The listed-only unique matches classify 4,499 as Common Stock, 320 ADR, 166 REIT, six royalty trusts, five closed-end funds, two units, four NY registered shares, one MLP and one limited partnership. Both ambiguous listed-only results are closed-end funds. These prove broker STOCK is broader than the product's company-share contract. Ticket 02 must define ADR/REIT/partnership/registered-share treatment and exclude funds/units or explain any intentional policy. No share-class policy is invented here.
+
+The 4,990 asset joins are 4,989 active plus one inactive. Their Alpaca venues are NYSE/NASDAQ/AMEX/BATS/TXSE; broker NYSE/NASDAQ schedule labels are not precise primary-venue identifiers. There are no duplicate provider-symbol candidates assigned to different broker ISINs in the listed-only unique results. Alpaca's asset response does not carry ISIN, so this is an ISIN→FIGI→dated symbol→provider metadata join, not independent provider-side ISIN verification; record provider asset UUID and names and flag contradictory metadata rather than fuzzy-matching it away.
+
+### Daily coverage and history seed
+
+For all 4,990 asset-joined symbols, explicit historical SIP queries covering the **90 exchange sessions June 26–November 2, 2026** return HTTP 200, with pagination inspected and no truncated batches. **4,987 have November 2 bars; 4,915 have all 90 sessions.** The three lacking a previous-session bar are EMI (inactive asset, no seed bars), EFTY (last observed October 2) and OST (last observed September 11). EFTY is an active/tradable Alpaca asset despite the missing bar; neither asset status nor HTTP 200 proves freshness. No cause for its absence is inferred.
+
+Individual probes of all 14 listed-only FIGI symbols absent from Alpaca assets find two more usable 90-session histories, **MLEC and INDV**, including November 2. Eleven return HTTP 200 without bars; one Bloomberg-style symbol (`2678581D`) returns HTTP 400. The absence of a trading asset therefore does not prove the absence of historical market data.
+
+Across these 5,004 listed-only unique identity candidates, **4,989 have previous-session bars and 4,917 have all 90 sessions**. The full check used 80 history requests (79 HTTP 200, one isolated HTTP 400), with no remaining page token. Of the 4,499 explicitly identified Common Stock records, 4,486 have previous-session bars and 4,424 have all 90 sessions. These are measured provider coverage counts, not a finalized eligible universe, an exchange SLA, or proof that bars are free of later corrections. New listings/history gaps need ticket 02's history rule.
+
+The combination supports broad screening economically, but **complete observations for every catalogue row are not established**. Preserve the full input and an explicit mapping/type/listing/coverage exception ledger. Missing or contradictory identities cannot be silently accepted; missing bars must cause visible partial/unavailable status under the existing spec. No handpicked universe or automatic fallback feed was agreed. Reconcile each exception before treating that security as screened; carry its omission count/reason in the run. Deterministic eligibility/history/minimum-coverage and evaluation rules remain ticket 02 work.
+
+## Market-data semantics and observed samples
+
+Alpaca's supplied credentials returned HTTP 200 for the paper asset catalogue, historical SIP daily/minute bars, calendar and data corporate-actions endpoint. The asset catalogue includes inactive/OTC entries; asset presence or `tradable` is not Trading 212 eligibility. Raw prices/volumes are not archived in this report; evidence retains request parameters, identity metadata, counts and observation timestamps.
+
+The first suffix-derived daily test encountered HTTP 400: one invalid old broker symbol rejects the entire multi-symbol request (`CHA1` in the inspected batch). Therefore the estimate of 100-symbol batches only works after identity resolution and symbol validation. An HTTP 200 with no bar is a separate missing observation. An initial scan of the 4,535 suffix candidates recognized by Alpaca assets used 46 requests, all HTTP 200 with no pagination, and returned previous-session bars for 4,141 symbols. This is a diagnostic count, **not validated coverage of 4,141 eligible shares**. The final identity-derived scan is reported separately below.
+
+- Calendar sample spans 2026-10-30 to 2026-11-30. It omits Thanksgiving (November 26) and gives November 27 a 13:00 ET regular close, matching the [NYSE calendar](https://www.nyse.com/markets/hours-calendars). A weekday scheduler is insufficient.
+- November 2 minute samples for AAPL, MSFT, STN, UFI and JZ all include 09:30 ET bars. Premarket is sparse: STN has no premarket bar in the queried window; its first bar is at 09:30. No trade/bar must remain unavailable, never zero or a newly timestamped stale price.
+- Bars are intervals, not point-in-time quotes. A first qualifying regular-session minute-bar open at/after 09:30 ET is an available proxy, but a separate historical-auction sample also succeeded (below). Ticket 02 should choose explicitly between a primary-venue official opening auction and a minute-bar proxy, with late/missing-reference rules. A minute-bar open is not a verified official auction price. The [bar reference](https://docs.alpaca.markets/us/reference/stockbars) documents explicit SIP, adjustments, pagination and dated symbol resolution.
+- Consolidated SIP volume differs from single-venue IEX. Daily volume includes eligible extended-session trades, and trade conditions affect daily fields differently from minute fields. Consequently a daily `open` must not silently become the evaluation opening reference; calculate volume rules consistently with the selected session definition. [Aggregation rules](https://docs.alpaca.markets/us/docs/market-data-faq).
+
+### Historical opening auctions
+
+`/v2/stocks/auctions` with explicit SIP, `asof=2026-11-03` and November 2 bounds returned HTTP 200, no pagination and opening/closing arrays for all five sample symbols. Events include price, size, timestamp, exchange and condition; this evidence stores only field presence, timestamps/codes. The accompanying exchange-code endpoint also returned HTTP 200. Multiple venues and opening/official-opening flags occur for the same day, sometimes with repeated event timestamps and later venue openings. Thus “take the first returned auction” is not a correct venue-selection rule. [Auction endpoint](https://docs.alpaca.markets/us/reference/stockauctions-1), [event schema](https://docs.alpaca.markets/us/v1.1/reference/stockauctionsingle-1).
+
+A primary-listing venue and official-open condition can support a more direct reference than an OHLC open. Ticket 02 must specify venue mapping, condition preference, duplicate/conflicting-event handling, delayed openings, missing auctions, cutoff and whether any proxy is permitted. Five successes establish available data, not universal auction coverage or an executable fill. The budget can accommodate one bounded auction cohort request/day plus pagination under the existing action/reference reserve; whole-universe evaluation references would require another approximately 51 requests/day at the 100-symbol planning batch size.
+
+## Actions, renames and missing outcomes
+
+The October 1–November 3 action sample returns cash dividends, cash mergers, forward/reverse splits, name changes, reorganizations, stock mergers, spin-offs and worthless removals. Its first 1,000 records have a next-page token: this sample confirms access/types, not complete action coverage. The bounded AAPL/NVDA/FB/META/TWTR history has no further page and includes NVDA's June 10, 2024 split, FB→META on June 9, 2022 and TWTR's October 28, 2022 cash merger, with consideration/ratio fields present. These are usable examples, not proof of exhaustive or timely terminal events. [Corporate actions reference](https://docs.alpaca.markets/us/reference/corporateactions-1).
+
+An additional name-change record involves an earlier, different security using META before Facebook's rename. This is concrete evidence that symbols alone cannot be permanent identities. A dated `asof=2022-06-10` META query returns all five sessions across the FB rename. Preserve the saved symbol/identity/as-of mapping instead of reinterpreting old selections under today's ticker.
+
+TWTR daily bars in the October 24–November 2, 2022 sample stop on October 27; no fabricated post-merger bar appears. The same multi-symbol request for BBBY and BBBYQ returns historical observations labeled BBBYQ, illustrating alias resolution rather than proof that free SIP supplies OTC continuation. No free complete terminal-outcome service was established.
+
+Required downstream behavior: preserve removed/delisted selections, lookup issuer/action evidence, record consideration and applicable effective dates only when verified, and expose unresolved terminal outcomes separately. Do not carry a stale last close forward, assume zero after delisting, drop the member from evaluation, or merge symbols solely by spelling. Ticket 02 must define cash/stock merger, dividend/split and missing-outcome arithmetic, denominator/disclosure and later-correction policy. The action API warns that creation timeliness is not guaranteed; `data_quality=all` can expose incomplete records and is not a licence to treat them as settled outcomes.
+
+## Morning freshness and delayed premarket
+
+The observed prior-session bars have timestamp 2026-11-02T05:00:00Z (New York session-date midnight). This timestamp does **not** reveal when the API first published the final bar. This check ran after the November 3 report deadline, so it cannot prove delivery by 08:00 Zagreb. No documented before-deadline SLA was established. Previous-session historical SIP is accessible; guaranteed future punctuality is not established by a single HTTP 200.
+
+For production, ticket 03/05 must schedule a paced run before 08:00 with retry headroom; save retrieval time, expected exchange session, per-symbol status, feed and adjustment version; publish stale/partial/unavailable if the required session is absent. Observe pre-deadline retrieval over several sessions and DST/early-close cases before describing morning reliability as verified. The user explicitly agreed on 2026-11-03 to carry this measurement into [ticket 05](issues/05-market-snapshots.md#observed-morning-freshness--carried-from-issue-01), allowing feasibility research to close with punctuality unverified. Do not backdate today's measurement.
+
+At 08:00 Europe/Zagreb it is normally 02:00 New York, or 03:00 during DST mismatch: regular 04:00 ET premarket has not begun. The report therefore uses the previous completed session. Optional later re-review queries an explicitly bounded historical SIP interval ending at least 15 minutes plus a clock margin before retrieval; show event/bar interval and retrieval timestamps separately. No current-entry validation is possible from delayed prints. Do not substitute IEX, overnight BOATS, or last-session values as fresh consolidated premarket data.

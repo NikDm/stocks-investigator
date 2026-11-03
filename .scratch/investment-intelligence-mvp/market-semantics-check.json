@@ -1,0 +1,1123 @@
+{
+  "checked_at": "2026-11-03T08:04:10.957580+00:00",
+  "date": "2026-11-02",
+  "mapping": "suffix-derived candidates only; not validated identities",
+  "feed": "sip",
+  "adjustment": "raw",
+  "batches": [
+    {
+      "offset": 0,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 100,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 200,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 300,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 400,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 500,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 600,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 700,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 800,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 900,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1000,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1100,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1200,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1300,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1400,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1500,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1600,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1700,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1800,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 1900,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2000,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2100,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2200,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2300,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2400,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2500,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2600,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2700,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2800,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 2900,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3000,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3100,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3200,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3300,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3400,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3500,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3600,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3700,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3800,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 3900,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 4000,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 4100,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 4200,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 4300,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 4400,
+      "status": 200,
+      "has_next_page": false
+    },
+    {
+      "offset": 4500,
+      "status": 200,
+      "has_next_page": false
+    }
+  ],
+  "samples": {
+    "calendar": {
+      "http_status": 200,
+      "parameters": {
+        "start": "2026-10-30",
+        "end": "2026-11-30"
+      },
+      "sessions": [
+        {
+          "close": "16:00",
+          "date": "2026-10-30",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-02"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-02",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-03"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-03",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-04"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-04",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-05"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-05",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-06"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-06",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-09"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-09",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-10"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-10",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-12"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-11",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-12"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-12",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-13"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-13",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-16"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-16",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-17"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-17",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-18"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-18",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-19"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-19",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-20"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-20",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-23"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-23",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-24"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-24",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-25"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-25",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-11-27"
+        },
+        {
+          "close": "13:00",
+          "date": "2026-11-27",
+          "open": "09:30",
+          "session_close": "1700",
+          "session_open": "0400",
+          "settlement_date": "2026-11-30"
+        },
+        {
+          "close": "16:00",
+          "date": "2026-11-30",
+          "open": "09:30",
+          "session_close": "2000",
+          "session_open": "0400",
+          "settlement_date": "2026-12-01"
+        }
+      ]
+    },
+    "actions": {
+      "http_status": 200,
+      "parameters": {
+        "start": "2026-10-01",
+        "end": "2026-11-03",
+        "limit": 1000
+      },
+      "keys": [
+        "corporate_actions",
+        "next_page_token"
+      ],
+      "counts": {
+        "capital_gains_distributions": 7,
+        "cash_dividends": 920,
+        "cash_mergers": 18,
+        "forward_splits": 1,
+        "name_changes": 6,
+        "partial_calls": 2,
+        "reorganizations": 8,
+        "reverse_splits": 18,
+        "rights_distributions": 1,
+        "spin_offs": 1,
+        "stock_and_cash_mergers": 1,
+        "stock_dividends": 2,
+        "stock_mergers": 4,
+        "worthless_removals": 11
+      },
+      "has_next_page": true
+    },
+    "action_history": {
+      "http_status": 200,
+      "parameters": {
+        "symbols": "AAPL,NVDA,FB,META,TWTR",
+        "start": "2022-01-01",
+        "end": "2026-11-03",
+        "limit": 1000
+      },
+      "keys": [
+        "corporate_actions",
+        "next_page_token"
+      ],
+      "counts": {
+        "cash_dividends": 54,
+        "cash_mergers": 1,
+        "forward_splits": 1,
+        "name_changes": 2
+      },
+      "has_next_page": false
+    },
+    "delisted_bars": {
+      "http_status": 200,
+      "parameters": {
+        "symbols": "TWTR,BBBY,BBBYQ",
+        "timeframe": "1Day",
+        "start": "2022-10-24T04:00:00Z",
+        "end": "2022-11-02T04:00:00Z",
+        "feed": "sip",
+        "adjustment": "raw",
+        "limit": 1000
+      },
+      "counts": {
+        "BBBYQ": 8,
+        "TWTR": 4
+      },
+      "timestamps": {
+        "BBBYQ": {
+          "first": "2022-10-24T04:00:00Z",
+          "last": "2022-11-02T04:00:00Z",
+          "has_0930": false
+        },
+        "TWTR": {
+          "first": "2022-10-24T04:00:00Z",
+          "last": "2022-10-27T04:00:00Z",
+          "has_0930": false
+        }
+      },
+      "has_next_page": false
+    },
+    "rename_bars": {
+      "http_status": 200,
+      "parameters": {
+        "symbols": "META,FB",
+        "timeframe": "1Day",
+        "start": "2022-06-06T04:00:00Z",
+        "end": "2022-06-11T04:00:00Z",
+        "asof": "2022-06-10",
+        "feed": "sip",
+        "adjustment": "raw",
+        "limit": 1000
+      },
+      "counts": {
+        "META": 5
+      },
+      "timestamps": {
+        "META": {
+          "first": "2022-06-06T04:00:00Z",
+          "last": "2022-06-10T04:00:00Z",
+          "has_0930": false
+        }
+      },
+      "has_next_page": false
+    },
+    "opening_premarket": {
+      "http_status": 200,
+      "parameters": {
+        "symbols": "AAPL,MSFT,STN,UFI,JZ",
+        "timeframe": "1Min",
+        "start": "2026-11-02T09:00:00Z",
+        "end": "2026-11-02T14:32:00Z",
+        "feed": "sip",
+        "adjustment": "raw",
+        "limit": 10000
+      },
+      "counts": {
+        "UFI": 4,
+        "AAPL": 303,
+        "JZ": 7,
+        "MSFT": 213,
+        "STN": 2
+      },
+      "timestamps": {
+        "UFI": {
+          "first": "2026-11-02T13:01:00Z",
+          "last": "2026-11-02T14:30:00Z",
+          "has_0930": true
+        },
+        "AAPL": {
+          "first": "2026-11-02T09:00:00Z",
+          "last": "2026-11-02T14:32:00Z",
+          "has_0930": true
+        },
+        "JZ": {
+          "first": "2026-11-02T09:19:00Z",
+          "last": "2026-11-02T14:30:00Z",
+          "has_0930": true
+        },
+        "MSFT": {
+          "first": "2026-11-02T09:00:00Z",
+          "last": "2026-11-02T14:32:00Z",
+          "has_0930": true
+        },
+        "STN": {
+          "first": "2026-11-02T14:30:00Z",
+          "last": "2026-11-02T14:32:00Z",
+          "has_0930": true
+        }
+      },
+      "has_next_page": false
+    }
+  },
+  "auctions": {
+    "checked_at": "2026-11-03T08:14:24.245823+00:00",
+    "http_status": 200,
+    "parameters": {
+      "symbols": "AAPL,MSFT,STN,UFI,JZ",
+      "start": "2026-11-02T05:00:00Z",
+      "end": "2026-11-03T05:00:00Z",
+      "feed": "sip",
+      "asof": "2026-11-03",
+      "limit": 1000
+    },
+    "keys": [
+      "auctions",
+      "next_page_token"
+    ],
+    "structure": {
+      "UFI": [
+        {
+          "c": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.216042698Z",
+              "exchange": "P",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.220772974Z",
+              "exchange": "T",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:02.490695492Z",
+              "exchange": "N",
+              "condition": "6"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:02.492196115Z",
+              "exchange": "N",
+              "condition": "M"
+            }
+          ],
+          "d": "2026-11-02",
+          "o": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.320487093Z",
+              "exchange": "N",
+              "condition": "O"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.320487093Z",
+              "exchange": "N",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.32730779Z",
+              "exchange": "P",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:40:05.695871483Z",
+              "exchange": "T",
+              "condition": "Q"
+            }
+          ]
+        }
+      ],
+      "AAPL": [
+        {
+          "c": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.007006757Z",
+              "exchange": "Q",
+              "condition": "6"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.017528018Z",
+              "exchange": "Q",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.123299791Z",
+              "exchange": "P",
+              "condition": "6"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.126579338Z",
+              "exchange": "P",
+              "condition": "M"
+            }
+          ],
+          "d": "2026-11-02",
+          "o": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:00.152901938Z",
+              "exchange": "P",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.474320211Z",
+              "exchange": "Q",
+              "condition": "O"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.474744431Z",
+              "exchange": "Q",
+              "condition": "Q"
+            }
+          ]
+        }
+      ],
+      "JZ": [
+        {
+          "c": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.123133454Z",
+              "exchange": "P",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.452415782Z",
+              "exchange": "Q",
+              "condition": "6"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.452425128Z",
+              "exchange": "Q",
+              "condition": "M"
+            }
+          ],
+          "d": "2026-11-02",
+          "o": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.056007074Z",
+              "exchange": "Q",
+              "condition": "O"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.056024158Z",
+              "exchange": "Q",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.056650029Z",
+              "exchange": "P",
+              "condition": "Q"
+            }
+          ]
+        }
+      ],
+      "MSFT": [
+        {
+          "c": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.07326856Z",
+              "exchange": "P",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.258795419Z",
+              "exchange": "Q",
+              "condition": "6"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.258807044Z",
+              "exchange": "Q",
+              "condition": "M"
+            }
+          ],
+          "d": "2026-11-02",
+          "o": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:00.027756639Z",
+              "exchange": "P",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.194565089Z",
+              "exchange": "Q",
+              "condition": "O"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.195002816Z",
+              "exchange": "Q",
+              "condition": "Q"
+            }
+          ]
+        }
+      ],
+      "STN": [
+        {
+          "c": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.205101868Z",
+              "exchange": "P",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:00.220284998Z",
+              "exchange": "T",
+              "condition": "M"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:02.44518535Z",
+              "exchange": "N",
+              "condition": "6"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T21:00:02.454877528Z",
+              "exchange": "N",
+              "condition": "M"
+            }
+          ],
+          "d": "2026-11-02",
+          "o": [
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:00.883878985Z",
+              "exchange": "T",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.320555707Z",
+              "exchange": "N",
+              "condition": "O"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:30:01.320558776Z",
+              "exchange": "N",
+              "condition": "Q"
+            },
+            {
+              "fields": [
+                "c",
+                "p",
+                "s",
+                "t",
+                "x"
+              ],
+              "timestamp": "2026-11-02T14:32:38.627731405Z",
+              "exchange": "P",
+              "condition": "Q"
+            }
+          ]
+        }
+      ]
+    },
+    "has_next_page": false,
+    "exchange_codes_status": 200,
+    "exchange_codes": {
+      "A": "NYSE American (AMEX)",
+      "B": "NASDAQ OMX BX",
+      "C": "National Stock Exchange",
+      "D": "FINRA ADF",
+      "E": "Market Independent",
+      "F": "Texas Stock Exchange",
+      "G": "24X",
+      "H": "MIAX",
+      "I": "International Securities Exchange",
+      "J": "Cboe EDGA",
+      "K": "Cboe EDGX",
+      "L": "Long Term Stock Exchange",
+      "M": "Chicago Stock Exchange",
+      "N": "New York Stock Exchange",
+      "P": "NYSE Arca",
+      "Q": "NASDAQ OMX",
+      "S": "NASDAQ Small Cap",
+      "T": "NASDAQ Int",
+      "U": "Members Exchange",
+      "V": "IEX",
+      "W": "CBOE",
+      "X": "NASDAQ OMX PSX",
+      "Y": "Cboe BYX",
+      "Z": "Cboe BZ"
+    }
+  },
+  "action_field_presence": {
+    "cash_dividends": [
+      "cusip",
+      "ex_date",
+      "foreign",
+      "id",
+      "payable_date",
+      "process_date",
+      "rate",
+      "record_date",
+      "special",
+      "symbol"
+    ],
+    "cash_mergers": [
+      "acquiree_cusip",
+      "acquiree_symbol",
+      "effective_date",
+      "id",
+      "process_date",
+      "rate"
+    ],
+    "forward_splits": [
+      "cusip",
+      "due_bill_redemption_date",
+      "ex_date",
+      "id",
+      "new_rate",
+      "old_rate",
+      "payable_date",
+      "process_date",
+      "record_date",
+      "symbol"
+    ],
+    "name_changes": [
+      "id",
+      "new_cusip",
+      "new_symbol",
+      "old_cusip",
+      "old_symbol",
+      "process_date"
+    ]
+  },
+  "sample_scope": "Counts/timestamps only; corporate-actions first page is intentionally incomplete; suffix-derived bars are diagnostic, not final eligible coverage.",
+  "diagnostic_symbols_with_bar_count": 4141,
+  "diagnostic_requested_candidate_count": 4535
+}
