@@ -26,7 +26,7 @@ export async function dashboard(store: Foundation, now: number, enabled: boolean
 function assessment(a: Assessment, now: number) {
   const cite = (ids: string[]) => ids.map(id => `<a href="#source-${escape(id)}">source ${escape(id.slice(0,10))}</a>`).join(', ');
   const claims = (items: { text: string; evidenceIds: string[]; metricKeys?: string[] | undefined }[]) => `<ul>${items.map(c => `<li>${escape(c.text)} ${cite(c.evidenceIds)} ${c.metricKeys?.length ? `(market metrics: ${escape(c.metricKeys.join(', '))})` : ''}</li>`).join('')}</ul>`;
-  return `<p>${escape(a.thesisKind)}; attractiveness: ${escape(a.attractiveness)}; horizon: ${a.horizonSessions} exchange sessions. Causation unverified.</p>
+  return `${a.trackingJudgment ? `<p class="status">Recorded tracking thesis INVALIDATED, confirmed ${time(a.trackingJudgment.confirmedAt)}. <a href="/assessments/${encodeURIComponent(a.trackingJudgment.recordedVersionId)}">Original recorded thesis</a>. ${escape(a.trackingJudgment.reasons.join(', '))}. Positive replacement requires manual renewal with revised reasoning.</p>` : ''}<p>${escape(a.thesisKind)}; attractiveness: ${escape(a.attractiveness)}; horizon: ${a.horizonSessions} exchange sessions. Causation unverified.</p>
     <p>Information cutoff ${time(a.cutoff)}. Market as of ${time(a.marketAsOf)}. Expires ${time(a.expiresAt)} — ${now>=a.expiresAt ? 'EXPIRED / stale assessment' : 'within recorded validity'}.</p>
     <h4>Opportunity thesis (interpretation)</h4>${a.thesis ? claims([a.thesis]) : '<p>No supported thesis.</p>'}
     <h4>Invalidation conditions</h4>${claims(a.invalidation)}<h4>Facts</h4>${a.facts.map(f => `<blockquote>${escape(f.quote)} — ${escape(f.role)}; ${cite([f.evidenceId])}</blockquote>`).join('') || '<p>No cited facts.</p>'}

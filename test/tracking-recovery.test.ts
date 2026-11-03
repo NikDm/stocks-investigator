@@ -1,3 +1,4 @@
+import { authenticated } from './auth';
 import { expect, it } from 'vitest';
 import { researchFixture, researchNow as now } from './helpers/research';
 import { momentumThesis } from './helpers/tracking';
@@ -30,6 +31,9 @@ it('replays a close crossing concealed by missed reports and rejects a newer cop
     expect(check.invalidated).toContain('close_below:0');
     expect((await tracking.get('A'))!.thesisStatus).toBe('invalidated');
     expect((await tracking.get('A'))!.checkpointAt).toBe(selected.checkpointAt);
+    expect((await tracking.version(check.versionId))!.trackingJudgment?.thesisStatus).toBe('invalidated');
+    const { request } = await authenticated(() => at);
+    expect(await (await request(`/assessments/${check.versionId}`)).text()).toContain('Recorded tracking thesis INVALIDATED');
   } finally { await recovered.foundation.release(recovered.lease,at); }
   const renewal = await researchFixture('tracking:missed-renew','2026-12-02');
   at = Date.parse('2026-12-02T06:30:00Z');

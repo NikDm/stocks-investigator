@@ -19,7 +19,7 @@ Keep all credentials out of source control, logs, database artifacts, model cont
 
 ## Durable limits and recovery
 
-Migration 0005 adds a single shared research ledger. An atomic fenced reservation precedes every dispatch; its trigger checks all relevant day/month/run/security-pass dimensions. All paths, retries, repairs and future tracking/refresh callers must use this ledger rather than create separate allowances.
+Migration 0005 adds a single shared research ledger. An atomic fenced reservation precedes every dispatch; its trigger checks all relevant day/month/run/security-pass dimensions. All paths, retries, repairs and tracking/refresh callers use this ledger rather than create separate allowances. [Tracking](tracking.md) adds bounded daily change checks without a second source/model pool.
 
 | Resource | Hard limit |
 | --- | --- |

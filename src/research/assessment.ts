@@ -84,7 +84,7 @@ export function validateAssessment(raw: unknown, context: AssessmentContext) {
     sources, independentOrigins: new Set(sources.map(e => e.originId)).size,
     causation: 'unverified' as const };
 }
-export type Assessment = ReturnType<typeof validateAssessment>;
+export type Assessment = ReturnType<typeof validateAssessment> & { trackingJudgment?: { recordedVersionId: string; thesisStatus: 'invalidated'; confirmedAt: number; reasons: string[] } };
 
 export function proposalEvidenceIds(raw: unknown) {
   const p = proposalSchema.parse(raw);

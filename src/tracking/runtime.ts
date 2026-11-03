@@ -66,6 +66,9 @@ export class TrackingRuntime {
       check.status = 'superseded'; check.gaps.push('tracking_changed_during_check'); assessment = null;
     }
     if (assessment) {
+      if (current?.thesisStatus==='invalidated' || check.invalidated.length) assessment = { ...assessment, trackingJudgment: {
+        recordedVersionId: entry.thesisVersionId, thesisStatus: 'invalidated', confirmedAt: current?.invalidatedAt ?? this.clock(),
+        reasons: [...new Set([...(current?.invalidationReasons ?? []),...check.invalidated])] } };
       check.versionId = await hash(`tracking:${plan.snapshotId}:${entry.securityId}:${entry.versionId}`);
       writes.push(db.prepare('INSERT INTO tracking_versions(id,security_id,previous_id,snapshot_id,cutoff,value) VALUES(?,?,?,?,?,?)')
         .bind(check.versionId,entry.securityId,entry.versionId,plan.snapshotId,assessment.cutoff,JSON.stringify(assessment)));
