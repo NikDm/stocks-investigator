@@ -1,3 +1,5 @@
+import { Outcomes } from './outcomes/store';
+import { evaluationView } from './outcomes/view';
 import { Refreshes, refreshCommand } from './refresh/store';
 import { refreshControls, refreshView } from './refresh/view';
 import { Tracking, trackingCommand } from './tracking/store';
@@ -104,6 +106,25 @@ export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => num
     if (!snapshot) return c.json({ error: 'snapshot_unavailable' },404);
     const watch = await capture.foundation.db.prepare('SELECT value FROM early_watch_publications WHERE snapshot_id=?').bind(snapshot.id).first<{ value: string }>();
     return c.json({ snapshot, screening: await new Screener(capture).result(snapshot.id,offset), research: await new ResearchPublisher(capture.foundation).publication(snapshot.id), earlyWatch: watch ? JSON.parse(watch.value) : null, coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
+  });
+  app.get('/evaluation/:id',async c => {
+    const horizon = Number(c.req.query('horizon') ?? 20);
+    if (horizon!==10 && horizon!==20 && horizon!==30) return c.text('Invalid horizon',400);
+    const html = await evaluationView(new Foundation(c.env.DB),c.req.param('id'),horizon,clock(),c.req.query('after') ?? '');
+    return html ? c.html(html) : c.text('Evaluation unavailable',404);
+  });
+  app.get('/api/outcomes/:id',async c => {
+    const horizon = Number(c.req.query('horizon') ?? 20);
+    if (horizon!==10 && horizon!==20 && horizon!==30) return c.json({error:'invalid_horizon'},400);
+    const report = await new Foundation(c.env.DB).db.prepare('SELECT 1 FROM market_snapshots WHERE id=? AND frozen=1').bind(c.req.param('id')).first();
+    if (!report) return c.json({error:'snapshot_unavailable'},404);
+    return c.json(await new Outcomes(new Foundation(c.env.DB),clock).members(c.req.param('id'),horizon,c.req.query('after') ?? ''));
+  });
+  app.get('/evaluation/:id/:security/history',async c => {
+    const horizon = Number(c.req.query('horizon') ?? 20), after = Number(c.req.query('after') ?? 0);
+    if (![10,20,30].includes(horizon) || !Number.isSafeInteger(after) || after<0) return c.text('Invalid history query',400);
+    const history = await new Outcomes(new Foundation(c.env.DB),clock).history(c.req.param('id'),c.req.param('security'),horizon,after);
+    return c.html(page('Outcome calculation history',`<a href="/evaluation/${encodeURIComponent(c.req.param('id'))}?horizon=${horizon}">Evaluation</a><p>Append-only revisions, oldest first. Source observation and review identifiers are retained for audit.</p><pre>${escape(JSON.stringify(history,null,2))}</pre>${history.length===100 ? `<a href="?horizon=${horizon}&amp;after=${history.at(-1)!.sequence}">Next revisions</a>` : ''}`));
   });
   app.get('/dashboard.css', c => c.body(css,200,{ 'Content-Type': 'text/css; charset=utf-8' }));
   app.get('/', async c => c.html(await dashboard(new Foundation(c.env.DB),clock(),c.env.JOBS_ENABLED==='true')));

@@ -81,5 +81,15 @@ INSERT INTO refresh_versions VALUES('restore-refresh-version','restore-refresh-r
 INSERT INTO refresh_cohorts VALUES('restore-refresh-run','baseline','S1','restore-input-hash',5);
 INSERT INTO refresh_receipts VALUES('restore-refresh-run','restore-refresh-hash',7,1);
 """)
+connection.executescript("""
+INSERT INTO market_observations VALUES('restore-action','S1:dividend','S1','action','2026-11-04','raw',4,NULL,'{"value":{"cash":"1"}}');
+INSERT INTO outcome_action_reviews VALUES('restore-entitlement','restore-action',5,'Verified dividend','["https://example.com/dividend"]','{"entitlement":{"kind":"dividend","cash":"1"}}');
+INSERT INTO outcome_revisions VALUES('restore-outcome-initial','restore-snapshot','S1',20,'initial',100,101,NULL,'Initial deadline','outcome-hash','{"reference":null}','{"status":"unresolved","reason":"missing_reference"}');
+INSERT INTO outcome_revisions VALUES('restore-outcome-correction','restore-snapshot','S1',20,'correction',102,103,'restore-outcome-initial','Late Q receipt','corrected-hash','{"reference":{"price":"100"}}','{"status":"resolved","gross":"0.11"}');
+INSERT INTO outcome_work VALUES('restore-snapshot','S1',30,200);
+INSERT INTO outcome_planned VALUES('restore-snapshot');
+INSERT INTO market_tasks(snapshot_id,id,request,state) VALUES('restore-snapshot','restore-actions','{"kind":"actions"}','complete');
+INSERT INTO outcome_action_coverage VALUES('restore-snapshot','restore-actions','S1','2026-11-03','2026-12-15',100,0);
+""")
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')

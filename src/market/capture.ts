@@ -76,6 +76,12 @@ export class MarketCapture {
     const { nextToken } = JSON.parse(committed.value) as { nextToken: string | null };
     if (nextToken !== null && nextToken === task.token) throw new Error('repeated pagination token');
     if (nextToken === null) await this.planFreshnessCheck(lease,id,task);
+    if (nextToken===null && task.request.kind==='actions') await this.foundation.fenced(lease,this.clock(),[
+      this.sql(`INSERT INTO outcome_action_coverage(snapshot_id,task,security_id,start_session,end_session,acquired_at,terminal_page)
+        SELECT ?,?,json_extract(value,'$.securityId'),?,?,(SELECT MAX(acquired_at) FROM market_pages WHERE snapshot_id=? AND task=? AND page<=?),?
+        FROM json_each(?) WHERE (SELECT COUNT(*) FROM market_pages WHERE snapshot_id=? AND task=? AND page<=?)=? ON CONFLICT DO NOTHING`,
+        id,task.id,task.request.start,task.request.end,id,task.id,task.page,task.page,JSON.stringify(task.request.securities),id,task.id,task.page,task.page+1),
+    ]);
     await this.foundation.fenced(lease, this.clock(), [this.sql("UPDATE market_tasks SET token=?,page=page+1,attempts=0,state=?,reason=NULL WHERE snapshot_id=? AND id=? AND page=?", nextToken, nextToken === null ? 'complete' : 'pending', id, task.id, task.page)]);
     return true;
   }

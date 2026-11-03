@@ -1,6 +1,6 @@
 # 11 — Calculate fixed-horizon outcomes and compare with the screener
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 08
 

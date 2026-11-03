@@ -1,3 +1,4 @@
+import { Outcomes } from '../outcomes/store';
 import { TrackingRuntime } from '../tracking/runtime';
 import { Tracking } from '../tracking/store';
 import { MorningReports } from '../morning/publication';
@@ -141,6 +142,8 @@ export async function drainCollections(store: Foundation, env: MarketEnv, candid
   const lease = await store.claim(candidate.id,crypto.randomUUID(),clock()); if (!lease) return;
   try {
     const capture = new MarketCapture(store,clock), started = clock();
+    const outcomes = new Outcomes(store,clock);
+    await outcomes.planNext(lease);
     await store.fenced(lease,clock(),[store.db.prepare("INSERT INTO market_run_state(run_id,phase) VALUES(?,'plan') ON CONFLICT DO NOTHING").bind(lease.runId)]);
     const state = (await store.db.prepare('SELECT phase FROM market_run_state WHERE run_id=?').bind(lease.runId).first<{ phase: string }>())!;
     if (state.phase === 'plan') {
@@ -153,6 +156,7 @@ export async function drainCollections(store: Foundation, env: MarketEnv, candid
       await store.fenced(lease,clock(),[store.db.prepare("UPDATE market_run_state SET phase='acquire' WHERE run_id=?").bind(lease.runId)]); return;
     }
     if (state.phase === 'acquire') {
+      await outcomes.tick(lease);
       const snapshots = (await store.db.prepare(`SELECT DISTINCT s.id,s.manifest FROM market_snapshots s JOIN market_tasks t ON t.snapshot_id=s.id
         WHERE s.frozen=1 AND t.state='pending' AND t.next_at<=? LIMIT 3`).bind(clock()).all<{ id: string; manifest: string }>()).results;
       for (const snapshot of snapshots) {
