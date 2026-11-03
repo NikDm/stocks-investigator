@@ -17,3 +17,11 @@ No documented-standard violations. Two heuristic findings:
 No scope creep found. Queue size, issuer deduplication, immutable baseline, no-backfill behavior and early-watch confirmation gates matched the local scope. Daily positive-day counting follows exact positive close changes; the contract did not clearly require rounding that count's input signs.
 
 Initial totals: Standards 0 hard violations / 2 heuristics; Spec 2 correctness findings (P1 provenance, P2 CPU allowance). Both sets were addressed; independent follow-up and final checks are recorded in the ticket answer.
+
+## Follow-up
+
+Both reviewers independently confirmed the fixes at `67e9cf0`, with zero outstanding findings for local scope, conditional on the benchmark assertions. Standards: 0 outstanding; Spec: 0 outstanding.
+
+The first final full-suite attempt passed all smaller tests but stalled in the scale test after the provenance change. SQLite EXPLAIN showed a whole-snapshot receipt scan before iterating selected IDs. The final query uses explicit CROSS JOIN loop ordering: selected IDs → normalized primary-key lookup → `market_sighting_input(snapshot_id,input_id,acquired_at)` lookup. EXPLAIN confirms all index keys are used. The Spec reviewer independently confirmed unchanged join/filter/aggregation semantics. The stalled run was stopped, targeted 18 screening tests passed again, and the full suite was repeated; final evidence is in the ticket answer.
+
+Final verification: 53 tests in 8 files pass. All-universe screening: max stage 417 ms, ranking 299 ms, ten slowest stages 3,791 ms. Standards: 0 outstanding; Spec: 0 outstanding.

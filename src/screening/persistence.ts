@@ -21,9 +21,11 @@ export class Screener {
     if (decisions.length) {
       const ids = [...new Set(decisions.flatMap(d => d.inputIds))];
       // Fetch exact frozen content and this snapshot’s acquisition/action provenance.
+      // CROSS JOIN fixes lookup order: IDs → primary-key content → indexed snapshot receipts.
+      // Otherwise SQLite can scan the whole snapshot for each metric partition.
       // Normalized content can predate the query/action version that acquired it for this snapshot.
-      const saved = ids.length ? (await this.sql(`SELECT o.id,o.value,MAX(p.acquired_at) AS acquired_at,p.action_version,o.revision_of FROM market_observations o
-        JOIN json_each(?) j ON o.id=j.value JOIN market_sightings p ON p.input_id=o.id
+      const saved = ids.length ? (await this.sql(`SELECT o.id,o.value,MAX(p.acquired_at) AS acquired_at,p.action_version,o.revision_of FROM json_each(?) j
+        CROSS JOIN market_observations o ON o.id=j.value CROSS JOIN market_sightings p ON p.input_id=o.id
         WHERE p.snapshot_id=? AND p.acquired_at<=? GROUP BY o.id`,JSON.stringify(ids),snapshotId,manifest.cutoff!).all<{ id: string; value: string; acquired_at: number; action_version: string; revision_of: string | null }>()).results : [];
       const observations = saved.map(r => ({ ...JSON.parse(r.value), id: r.id, acquiredAt: r.acquired_at, actionVersion: r.action_version, revisionOf: r.revision_of } as SavedObservation));
       const rows = measure({ manifest: { ...manifest, decisions }, observations, splitVolumeVerified: manifest.splitVolumeVerified === true });
