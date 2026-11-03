@@ -1,3 +1,4 @@
+import { ResearchRuntime, RESEARCH_STAGE_CPU_RESERVATION_MS, type ResearchEnv } from '../research/runtime';
 import { Screener, SCREENING_STAGE_CPU_RESERVATION_MS } from '../screening/persistence';
 import { z } from 'zod';
 import { Foundation, type Lease, type Run } from '../persistence';
@@ -10,7 +11,7 @@ import { freezeDueReferences, planEvaluation } from './evaluation';
 import type { Identity } from './types';
 
 export const marketCommand = z.object({ kind: z.literal('market'), reportDate: z.iso.date(), seed: z.boolean().default(false) }).strict();
-export type MarketEnv = { MARKET_ENABLED?: string; ALPACA_KEY?: string; ALPACA_SECRET?: string; TRADING212_AUTHORIZATION?: string };
+export type MarketEnv = ResearchEnv & { MARKET_ENABLED?: string; ALPACA_KEY?: string; ALPACA_SECRET?: string; TRADING212_AUTHORIZATION?: string };
 function credentials(env: MarketEnv): MarketCredentials {
   if (!env.ALPACA_KEY || !env.ALPACA_SECRET || !env.TRADING212_AUTHORIZATION) throw new Error('market_credentials_missing');
   return { alpacaKey: env.ALPACA_KEY, alpacaSecret: env.ALPACA_SECRET, brokerAuthorization: env.TRADING212_AUTHORIZATION };
@@ -58,16 +59,17 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
     const http = new MarketHttp(store,lease,credentials(env),clock,fetcher,command.seed);
     const bootstrap = new MarketBootstrap(capture,http,clock);
     await store.fenced(lease,clock(),[db.prepare('INSERT INTO market_run_state(run_id) VALUES(?) ON CONFLICT DO NOTHING').bind(lease.runId)]);
+    let research: ResearchRuntime | undefined;
     let queriesRemaining = 850, cpuRemainingMs = 16000; // Leave 4 seconds for coordinator/serialization overhead.
     for (let stage = 0; stage < 32 && clock() - started < 195000; stage++) {
       await store.renew(lease,clock());
       const state = (await db.prepare('SELECT phase,cursor FROM market_run_state WHERE run_id=?').bind(lease.runId).first<{ phase: string; cursor: number }>())!;
       let phase = state.phase, cursor = state.cursor;
-      const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, screening: 65, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
+      const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, screening: 65, research: 100, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
       // Reserve CPU work across all phases, including multiple screening partitions.
       // Wall time includes provider waits, so it cannot measure CPU; allowances are conservative local bounds.
       const cpuReserveMs = ({ bootstrap: 5000, resolve: 5000, plan: 1000, acquire: 4000, qualify: 1000,
-        screening: SCREENING_STAGE_CPU_RESERVATION_MS, evaluation: 6000, finish: 1000 } as Record<string,number>)[phase] ?? 1000;
+        screening: SCREENING_STAGE_CPU_RESERVATION_MS, research: RESEARCH_STAGE_CPU_RESERVATION_MS, evaluation: 6000, finish: 1000 } as Record<string,number>)[phase] ?? 1000;
       if (queriesRemaining < queryReserve || cpuRemainingMs < cpuReserveMs) break;
       queriesRemaining -= queryReserve; cpuRemainingMs -= cpuReserveMs;
       if (phase === 'bootstrap') {
@@ -95,7 +97,10 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
       } else if (phase === 'qualify') {
         if (await capture.finalize(lease,lease.runId)) phase = 'screening';
       } else if (phase === 'screening') {
-        if (await new Screener(capture,clock).step(lease,lease.runId)) phase = 'evaluation';
+        if (await new Screener(capture,clock).step(lease,lease.runId)) phase = command.seed ? 'evaluation' : 'research';
+      } else if (phase === 'research') {
+        research ??= await ResearchRuntime.create(store,lease,env,clock,fetcher);
+        if (await research.step(lease,lease.runId,Math.min(started+195000,clock()+35000))) phase = 'evaluation';
       } else if (phase === 'evaluation') {
         const snapshot = (await capture.snapshot(lease.runId))!;
         await planEvaluation(capture,lease,lease.runId,snapshot.expectedSession); phase = 'finish';

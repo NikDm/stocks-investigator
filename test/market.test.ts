@@ -217,17 +217,18 @@ it('keeps raw-close and action collection obligations for saved members after br
   expect((await capture.snapshot('saved-universe'))?.decisions[0]?.reason).toBe('eligible');
 });
 
-it('drains a real capture command from read-only provider HTTP through immutable persisted manifests', async () => {
-  const liveInstrument = { ...instrument, isin: 'runtime-isin' };
-  const liveIdentity = { ...identity, isin: liveInstrument.isin, securityId: 'runtime-elf', compositeFIGI: 'runtime-elf' };
+it.each([true,false])('drains capture with seed=%s while reserving daily research publication for morning runs', async seed => {
+  const runtimeNow = now+(seed ? 0 : 120000);
+  const liveInstrument = { ...instrument, isin: `runtime-isin-${seed}` };
+  const liveIdentity = { ...identity, isin: liveInstrument.isin, securityId: `runtime-elf-${seed}`, compositeFIGI: `runtime-elf-${seed}` };
   const store = new Foundation(env.DB);
   for (const resource of ['market_requests','broker_instruments','broker_exchanges','figi']) {
     await store.setBudget('2026-11',resource,1000); await store.setBudget('2026-11-03',resource,600);
   }
   await env.DB.prepare('INSERT INTO market_identity_reviews(id,isin,valid_from,valid_through,acquired_at,value) VALUES(?,?,?,?,?,?)')
-    .bind('elf-review',liveInstrument.isin,'2026-11-01','2026-11-10',now-1000,JSON.stringify(liveIdentity)).run();
+    .bind(`elf-review-${seed}`,liveInstrument.isin,'2026-11-01','2026-11-10',runtimeNow-1000,JSON.stringify(liveIdentity)).run();
   const { drainMarket } = await import('../src/market/runtime');
-  const run = await store.enqueue('runtime:market',{ kind: 'market', reportDate: '2026-11-03', seed: false },now);
+  const run = await store.enqueue(`runtime:market:${seed}`,{ kind: 'market', reportDate: '2026-11-03', seed },runtimeNow);
   const fetcher: typeof fetch = async (input) => {
     const url = new URL(String(input)); let body: unknown;
     if (url.pathname.endsWith('instruments')) body = [liveInstrument];
@@ -241,12 +242,16 @@ it('drains a real capture command from read-only provider HTTP through immutable
   };
   for (let tick = 0; tick < 8 && (await store.run(run.id))?.state !== 'completed'; tick++) await drainMarket(store,{
     ALPACA_KEY: 'test', ALPACA_SECRET: 'test', TRADING212_AUTHORIZATION: 'test',
-  },run,() => now,fetcher);
+  },run,() => runtimeNow,fetcher);
   expect((await store.run(run.id))?.state).toBe('completed');
-  expect((await new MarketCapture(store,() => now).snapshot(run.id))?.status).toBe('complete');
+  expect((await new MarketCapture(store,() => runtimeNow).snapshot(run.id))?.status).toBe('complete');
   expect((await store.report(run.id))?.items[0]?.value['researchOnly']).toBe('true');
+  const { ResearchPublisher } = await import('../src/research/publisher');
+  const research = await new ResearchPublisher(store,() => runtimeNow).publication(run.id);
+  if (seed) expect(research).toBeNull();
+  else expect(research).not.toBeNull();
   const { Screener } = await import('../src/screening/persistence');
-  expect(await new Screener(new MarketCapture(store,() => now),() => now).result(run.id)).toMatchObject({ universeCount: 1, baseline: [], researchQueue: [], status: 'complete' });
+  expect(await new Screener(new MarketCapture(store,() => runtimeNow),() => runtimeNow).result(run.id)).toMatchObject({ universeCount: 1, baseline: [], researchQueue: [], status: 'complete' });
 });
 
 it('appends split-adjustment revisions without duplicating raw history or changing the first snapshot', async () => {

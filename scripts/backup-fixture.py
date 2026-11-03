@@ -40,7 +40,22 @@ INSERT INTO market_successor_links VALUES('restore-successor','S1','S2','2026-11
 UPDATE market_snapshots SET frozen=1 WHERE id='restore-snapshot';
 INSERT INTO screening_metrics VALUES('restore-snapshot','S1','metric-hash','{"ticker":"S1","inputIds":["restore-bar"]}');
 INSERT INTO screening_ranks VALUES('restore-snapshot','S1','{"rank":1,"disposition":"research_queue"}');
-INSERT INTO screening_results VALUES('restore-snapshot','{"baseline":["S1"],"researchQueue":["S1"]}');
+INSERT INTO screening_results VALUES('restore-snapshot','{"baseline":["S1"],"researchQueue":["S1"],"inputHash":"restore-input-hash"}');
+""")
+connection.executescript("""
+INSERT INTO research_calls VALUES('restore-model-call','restore-run','restore-pass','model',1,0);
+INSERT INTO research_charges VALUES('restore-model-call','month','2026-11','model_microdollars',1500,NULL,15000000);
+INSERT INTO research_sources VALUES('restore-source','S1','https://www.sec.gov/Archives/edgar/data/1/000000000126000001/event.txt','{"securityId":"S1","publishedAt":1}');
+INSERT INTO research_evidence VALUES('restore-evidence','S1','https://www.sec.gov/Archives/edgar/data/1/000000000126000001/event.txt',1,'{"id":"restore-evidence","text":"A concrete event.","replayGap":"sanitized_excerpt_only"}');
+INSERT INTO research_source_clock VALUES(1,1);
+INSERT INTO research_plans VALUES('restore-snapshot','restore-run','restore-input-hash',2,100,'{"queue":[{"securityId":"S1"}]}');
+INSERT INTO research_passes VALUES('restore-snapshot','S1',1,'{"pending":"restore-model-call","decision":null}');
+INSERT INTO research_intake VALUES('restore-snapshot',1,'{"phase":"notes","pending":"restore-model-call"}');
+INSERT INTO research_publications VALUES('restore-snapshot','restore-request-hash',2,3,'{"main":[],"decisions":[{"securityId":"S1","outcome":"insufficient_evidence"}]}');
+INSERT INTO research_decisions VALUES('restore-snapshot','S1','insufficient_evidence','{"assessment":{"sources":[{"id":"restore-evidence"}]}}');
+INSERT INTO research_assessment_versions VALUES('restore-assessment','restore-snapshot','S1',NULL,'initial','restore-request-hash',2,'{"sources":[{"id":"restore-evidence"}]}');
+INSERT INTO early_watch_publications VALUES('restore-snapshot','2026-11-03',2,'{"active":[],"gaps":["source_unavailable"]}');
+INSERT INTO early_watch_history VALUES('restore-snapshot',0,'S1','restore-event','confirmed_not_selected','{"securityId":"S1","status":"confirmed_not_selected"}');
 """)
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')

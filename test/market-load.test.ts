@@ -1,6 +1,11 @@
 import { env } from 'cloudflare:test';
 import { expect, it } from 'vitest';
 import { Screener, SCREENING_STAGE_CPU_RESERVATION_MS } from '../src/screening/persistence';
+import { ResearchPublisher } from '../src/research/publisher';
+import { ResearchTools } from '../src/research/tools';
+import { ResearchIntake } from '../src/research/intake';
+import { BoundedResearcher, type ResearchModel } from '../src/research/researcher';
+import { RESEARCH_STAGE_CPU_RESERVATION_MS } from '../src/research/runtime';
 import { Foundation } from '../src/persistence';
 import { MarketCapture } from '../src/market/capture';
 import { planEvaluation } from '../src/market/evaluation';
@@ -68,6 +73,55 @@ it('retains the complete audit-scale raw/split seed and qualifies it in bounded 
   expect((await screener.result(run.id,0,1))!.inputHash).toBe(screened.inputHash);
   await context.annotate(JSON.stringify({ benchmark: 'local-screening', securities: 5078, screeningStages,
     screeningMs: clock()-screeningStarted, maxScreeningStageMs, rankingMs, combinedPartitionsMs }),'benchmark');
+  // Exercise all 12 permitted main model turns and 18 main tool calls against
+  // the full saved universe. External API fixtures have no real network latency.
+  let simulatedWait = 0;
+  const researchClock = () => clock()+simulatedWait;
+  const publisher = new ResearchPublisher(store,researchClock);
+  const researchStart = clock();
+  await publisher.begin(lease,run.id,{ cutoff: researchClock()+3600000, expiresAt: researchClock()+86400000 });
+  const plan = (await publisher.plan(run.id))!;
+  const tools = new ResearchTools(store,lease,{ secUserAgent: 'Fixture contact@example.com', braveKey: 'fixture' },researchClock,async request => {
+    simulatedWait += 250;
+    const url = String(request);
+    if (url.includes('api.search.brave.com')) return new Response('{"web":{"results":[]}}',{ headers: { 'Content-Type': 'application/json' } });
+    if (url.includes('data.sec.gov')) {
+      const cik = /CIK(\d+)\.json/.exec(url)![1]!;
+      return new Response(JSON.stringify({ filings: { recent: { accessionNumber: [`${cik}-26-000001`], primaryDocument: ['event.htm'],
+        acceptanceDateTime: [new Date(researchClock()-1000).toISOString()], form: ['8-K'] } } }),{ headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response('A contract was signed.',{ headers: { 'Content-Type': 'text/plain' } });
+  });
+  const turns = new Map<string,number>();
+  const fixtureModel: ResearchModel = { modelId: 'fixture', async complete(request) {
+    if (!request.context.includes('"securityId"') || request.system.startsWith('Public source')) return { output: { notes: [] }, usage: { input: 500, output: 50 } };
+    const context = JSON.parse(request.context) as { securityId: string; sources: { id: string }[] };
+    const turn = (turns.get(context.securityId) ?? 0)+1; turns.set(context.securityId,turn);
+    if (turn<4) return { output: { kind: 'tools', requests: [{ kind: 'read', sourceId: context.sources[0]!.id },{ kind: 'read', sourceId: context.sources[0]!.id }] }, usage: { input: 500, output: 80 } };
+    return { output: { kind: 'assessment', proposal: { outcome: 'accepted', thesisKind: 'unexplained', facts: [], interpretations: [], unknowns: ['The momentum explanation remains unverified.'],
+      thesis: { text: 'Momentum may continue while above the moving average.', evidenceIds: [], metricKeys: ['sma20'] },
+      invalidation: [{ text: 'The price falls below the moving average.', evidenceIds: [], metricKeys: ['sma20'] }],
+      horizonSessions: 20, attractiveness: 'conditional', priceCondition: 'sma20' } }, usage: { input: 500, output: 500 } };
+  } };
+  const intake = new ResearchIntake(publisher,tools,fixtureModel,plan.queue.map((q,i) => ({ securityId: q.securityId, issuerId: q.issuerId, cik: String(i+1) })),researchClock);
+  const researcher = new BoundedResearcher(publisher,tools,fixtureModel,researchClock);
+  const researchDurations: number[] = [];
+  for (let i=0;i<60;i++) {
+    await store.renew(lease,researchClock());
+    const stage = clock();
+    const done = await intake.step(lease,run.id,researchClock()+35000) && await researcher.step(lease,run.id,researchClock()+35000);
+    const duration = clock()-stage; researchDurations.push(duration);
+    expect(duration).toBeLessThan(RESEARCH_STAGE_CPU_RESERVATION_MS);
+    if (done) break;
+  }
+  expect([...turns.values()]).toEqual([4,4,4]);
+  expect((await publisher.publication(run.id))!.main).toEqual(plan.queue.map(q => q.securityId));
+  expect((await tools.ledger.usage('run','turn')).reserved).toBe(13);
+  expect((await tools.ledger.usage('day','fetch')).reserved).toBe(24);
+  const combinedResearchStagesMs = researchDurations.sort((a,b) => b-a).slice(0,10).reduce((sum,n) => sum+n,0);
+  expect(combinedResearchStagesMs).toBeLessThan(15000);
+  await context.annotate(JSON.stringify({ benchmark: 'local-research', securities: 5078, stages: researchDurations.length,
+    researchMs: clock()-researchStart, maxStageMs: researchDurations[0], combinedResearchStagesMs, modelTurns: 13, sourceFetches: 24 }),'benchmark');
   const planningStarted = clock();
   await store.renew(lease,clock());
   await planEvaluation(capture,lease,run.id,'2026-11-03');

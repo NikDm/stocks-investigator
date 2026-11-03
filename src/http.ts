@@ -1,3 +1,4 @@
+import { ResearchPublisher } from './research/publisher';
 import { Hono } from 'hono';
 import { createRemoteJWKSet, createLocalJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 import { z } from 'zod';
@@ -96,7 +97,8 @@ export function createApp(options: { keySet?: JWTVerifyGetKey } = {}) {
     const capture = new MarketCapture(new Foundation(c.env.DB));
     const snapshot = await capture.snapshot(c.req.param('id'),offset);
     if (!snapshot) return c.json({ error: 'snapshot_unavailable' },404);
-    return c.json({ snapshot, screening: await new Screener(capture).result(snapshot.id,offset), coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
+    const watch = await capture.foundation.db.prepare('SELECT value FROM early_watch_publications WHERE snapshot_id=?').bind(snapshot.id).first<{ value: string }>();
+    return c.json({ snapshot, screening: await new Screener(capture).result(snapshot.id,offset), research: await new ResearchPublisher(capture.foundation).publication(snapshot.id), earlyWatch: watch ? JSON.parse(watch.value) : null, coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
   });
   app.get('/', async (c) => {
     const store = new Foundation(c.env.DB);
