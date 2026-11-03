@@ -16,6 +16,14 @@ Daily reports summarize material changes in market evidence and thesis evidence 
 
 Acceptance: cap, archive/renew transitions and simultaneous selections are consistent; repeat stories do not appear as new corroboration; prior versions survive updates; no-change items do not require full repeated reports; failures remain visible. Verify lifecycle and versioning boundaries.
 
+### Refined implementation contract — issue 03
+
+Use the tracking boundary and SQL lifecycle events in [architecture](../architecture.md). Commands include stable identity, expected revision and idempotency key. Atomically enforce ten occupied slots, counting needs-renewal; two simultaneous selections cannot both take the last slot. Archive explicitly, retaining every assessment/cohort.
+
+Implement v1 selection/session-20 close checkpoint, invalidation while active, expiry distinct from renewal, paused needs-renewal research and manual renewal requiring a current assessment and starting next exchange session. No silent slot release or thesis replacement. Run material-change predicates deterministically and share evidence work for tracked/main overlap. Up to ten tracked names consume the existing source/model pool, with incomplete checks visible on exhaustion. Publish dated no-change checks without relabeling expired assessments current; material changes append versions. H10/H20/H30 capture continues regardless of archive/invalidation.
+
+Proposed seam: authorized tracking commands → observable lifecycle/history/report changes. Test concurrency, calendar boundaries and issue 02 lifecycle example after confirming TDD seams; not ownership/portfolio fit.
+
 ## Completion
 
 Record the evidence or delivered behavior, relevant checks and limitations in `## Answer`. Update the map with the answer link. Use the repository's claim/completion workflow when work actually starts; do not mark planned work complete.

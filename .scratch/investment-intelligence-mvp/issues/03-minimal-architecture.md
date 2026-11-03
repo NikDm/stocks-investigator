@@ -1,6 +1,6 @@
 # 03 — Choose a minimal hosted architecture and refine implementation tickets
 
-Status: needs-triage
+Status: resolved
 Type: research
 Blocked by: 01, 02
 
@@ -25,3 +25,13 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+## Answer
+
+Completed architecture research on 2026-11-03. The [design](../architecture.md) and [primary-source comparison](../architecture-sources.md) recommend one strict TypeScript Worker/Hono application, D1 and short checkpointed Cron stages, versus VPS/SQLite and managed app/Postgres alternatives. Private Access, SQL boundaries, jobs, immutable report/cohort publication, full-universe reference/action capture, hard shared source/model/spend limits, source trust controls, explicit failure states, observability and restore procedures are specified. Direct Haiku 4.5 tool use is proposed with a pinned model and pre-operation quality/account checks; MCP/AgentCore add no required MVP capability.
+
+The consequential trade-off is recorded in [proposed ADR 0001](../../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md), using the domain-modeling format. It is a recommendation, not an investor-approved deployment. The all-in planning estimate is EUR 45/month at assumed USD/EUR parity, including $28 base allocations, 25% tax/FX reserve and EUR 10 contingency; actual billing/variable usage and backup destination remain 04 acceptance gates.
+
+Refined every downstream ticket 04–13 with concrete boundaries, budget/concurrency/data-history behavior and proposed public verification seams. Only 04 is ready-for-agent because its dependencies are resolved; 05–13 remain needs-triage pending their recorded predecessors. No future test seam is represented as user-confirmed. The next /implement invocation authorizes its selected feature; paid provisioning still needs a concrete reviewable approval.
+
+Validation: checked local document links, dependency/status consistency, independent budget arithmetic and Git whitespace; the two-axis review compares against session-start cdec01c. This documentation-only repository has no package manifest, executable application, typechecker or test suite, so focused/full software tests and TDD are inapplicable. Runtime performance, observed pre-08:00 delivery, private deployment, source safety integration, model availability/quality and recovery targets are explicitly unverified; implementation tickets own those checks. No resources, subscriptions, provider outreach, adapters or application code were created.

@@ -2,12 +2,12 @@
 
 ## Notes
 
-- **Current handoff (2026-11-03):** [Issue 01](issues/01-data-feasibility.md#current-completion--2026-11-03) is resolved as research. All 5,078 US-schedule STOCK inputs have identity/coverage audit records; gaps and provider limitations remain explicit. The user chose to carry observed pre-08:00 delivery verification into [05](issues/05-market-snapshots.md#observed-morning-freshness--carried-from-issue-01). [Issue 02](issues/02-screening-and-evaluation-contract.md#answer) is resolved with a versioned domain contract; 03 is now unblocked and remains needs-triage pending architecture/refinement work.
+- **Current handoff (2026-11-03):** [Issue 01](issues/01-data-feasibility.md#current-completion--2026-11-03) is resolved as research. All 5,078 US-schedule STOCK inputs have identity/coverage audit records; gaps and provider limitations remain explicit. The user chose to carry observed pre-08:00 delivery verification into [05](issues/05-market-snapshots.md#observed-morning-freshness--carried-from-issue-01). [Issue 02](issues/02-screening-and-evaluation-contract.md#answer) is resolved with a versioned domain contract; 03 is resolved as architecture research: [design](architecture.md), [source comparison](architecture-sources.md), and [proposed ADR](../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md). 04 is ready-for-agent; 05–13 are refined but remain dependency-gated. Nothing has been provisioned.
 - User chose Alpaca for private personal noncommercial research. Agreement interpretation is a documented limitation, not a repeated provider-clarification gate. No outreach, paid subscriptions or provisioning authorized.
 - Use the supplied implement skill for the selected issue. Research tickets authorize investigation, not application adapters. Ticket 03 refines dependent implementation tickets before marking them ready-for-agent.
 - Read [spec](spec.md), [discovery](../../docs/discovery.md) and [glossary](../../CONTEXT.md). Use `claimed` / `resolved` for active execution/completion and the documented triage strings for planned work.
 - Work is milestone-based, without estimates or a weekly time commitment. No application code or paid resources have been created.
-- Git source-workspace metadata is empty/read-only. Current integration checkout: `/tmp/stocks-investigator-integration`, branch `integration/investment-intelligence-mvp`. No changes pushed.
+- Current work is on the source workspace’s `main` branch; its Git metadata is now populated. The earlier `/tmp/stocks-investigator-integration` checkout is historical, not the current commit destination. No changes pushed.
 
 ## Milestones
 
@@ -23,8 +23,8 @@
 | --- | --- | --- | --- | --- |
 | 01 | [Verify affordable market data and public research access](issues/01-data-feasibility.md) | research | — | resolved |
 | 02 | [Define reproducible screening and evaluation rules](issues/02-screening-and-evaluation-contract.md) | research | 01 | resolved |
-| 03 | [Choose a minimal hosted architecture and refine implementation tickets](issues/03-minimal-architecture.md) | research | 01, 02 | needs-triage |
-| 04 | [Create the private hosted application foundation](issues/04-hosted-foundation.md) | task | 03 | needs-triage |
+| 03 | [Choose a minimal hosted architecture and refine implementation tickets](issues/03-minimal-architecture.md) | research | 01, 02 | resolved |
+| 04 | [Create the private hosted application foundation](issues/04-hosted-foundation.md) | task | 03 | ready-for-agent |
 | 05 | [Capture broker-eligible market snapshots and calendars](issues/05-market-snapshots.md) | task | 04 | needs-triage |
 | 06 | [Implement deterministic momentum screening and baseline snapshots](issues/06-momentum-screening.md) | task | 05 | needs-triage |
 | 07 | [Research candidates and publish immutable evidence-backed assessments](issues/07-bounded-evidence-research.md) | task | 06 | needs-triage |
@@ -37,6 +37,8 @@
 
 ## Decisions-so-far
 
+- [Issue 03 completed, 2026-11-03](issues/03-minimal-architecture.md#answer): [minimal architecture](architecture.md) recommends one TypeScript Worker + D1 + checkpointed five-minute Cron, single-identity Access and direct bounded Haiku 4.5 tools, against VPS/SQLite and managed app/Postgres alternatives. Immutable SQL publication, whole-universe outcome capture, concurrency/fencing, trust boundaries, shared spend limits and recovery are specified. [Proposed ADR](../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md) records the trade-off without claiming investor approval. Planning total EUR 45/month includes domain, assumed tax/FX and contingency. 04–13 have concrete acceptance/seam proposals; only unblocked 04 is ready-for-agent. No software/deployment/model benchmark is claimed.
+
 - [Issue 02 completed, 2026-11-03](issues/02-screening-and-evaluation-contract.md#answer): [screen-eval-v1](screening-evaluation-contract.md) defines eligibility, sustained-momentum ranking, three-candidate research/final cap, five-entry early watch, lifecycle/material changes, primary-venue official-open references, 09:25 ET normal freeze, separate refresh cohorts, hypothetical fixed-horizon/action/cost/downside arithmetic, coverage denominators and usefulness feedback. Defaults are prospective design choices; no application code or personal risk limits were introduced. 03 is unblocked but must refine dependent tickets.
 
 - [Issue 01 completed, 2026-11-03](issues/01-data-feasibility.md#completed-research--2026-11-03): [full-universe evidence](coverage-check.md) and [current source/cost comparison](public-research-check.md) support the Alpaca Basic historical-SIP path at an illustrative EUR 32.50/month, including model/search/hosting/storage and tax/FX assumptions. The 5,858-suffix input count was not the universe; all 5,078 US-schedule STOCK records now have an exception-aware identity audit. No complete all-symbol, terminal-outcome or morning SLA is claimed. Massive Basic is an optional untested fallback. User moved observed morning punctuality to 05; 02 owns deterministic eligibility/evaluation rules and 03 owns actual model/architecture selection.
@@ -46,18 +48,18 @@
 - [Agreed product scope](../../docs/discovery.md): market-first sustained-momentum research for long-only US-listed company shares available on Trading 212, with evidence-backed independent assessments and a few-week holding period.
 - [Specification](spec.md): hosted private dashboard, 08:00 Europe/Zagreb report, optional manual pre-opening re-review, up to three main candidates and 10 tracked opportunities, no alerts or trading.
 - [Evaluation](spec.md): immutable records, prospective screener comparison, 10/20/30-trading-day horizons with 20 primary, opening reference and interim downside. Research usefulness is distinct from investment edge.
-- Total initial operating ceiling EUR 50/month. AgentCore is optional; Alpaca is the user-chosen market-data path, while architecture and the actual model await ticket 03.
+- Total initial operating ceiling EUR 50/month. AgentCore remains optional; Alpaca is the user-chosen data path. Issue 03 proposes Workers/D1 and pinned Haiku 4.5, with actual account/runtime/quality validation in 04/07.
 - No calendar commitment: the investor chooses tickets as time permits. No application code, paid resources or subscriptions were created during planning.
-- No ADR has been created: consequential technical choices remain unresolved. Ticket 03 records qualifying decisions with their alternatives and rationale when made.
+- [ADR 0001](../../docs/adr/0001-managed-sql-and-checkpointed-jobs.md) is proposed, recording managed SQL/checkpointed jobs versus VPS/managed alternatives; deployment approval is not implied.
 
 ## Fog
 
 - Operational pre-08:00 freshness measurement: 05 (explicit user disposition); reconciliation of identity/type/history exceptions and terminal outcomes: 02/05. Current evidence, budget and remaining source-retention limitations: [01](coverage-check.md).
 - Broker-account eligibility and symbol identity, including availability changes: 01–02.
 - Screening thresholds and early-watch defaults are resolved in [v1](screening-evaluation-contract.md); predictive usefulness remains prospective and unproven.
-- Lifecycle/material-change rules are resolved in v1; 03 must refine interfaces and downstream tasks.
+- Lifecycle/material-change rules are resolved in v1 and interfaces/downstream tasks are refined by 03; implementation and public-seam confirmation await their tickets.
 - Evaluation conventions are resolved in v1; auction/action coverage gaps and terminal outcomes remain explicit operational limitations for 05/11.
-- Architecture, model/tool budgets, source trust boundaries, private access, deployment and failure recovery: 03.
+- Architecture and model/tool limits are specified by 03; live runtime/private access/backups and account-specific billing await 04, model availability/quality and source-fetch enforcement await 07. Morning delivery remains unmeasured in 05; no deployment SLA or source-replay guarantee is claimed.
 - Whether actual results demonstrate selection value: prospective evidence from 11–12, not a prerequisite claim.
 
 ## Comments

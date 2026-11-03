@@ -16,6 +16,17 @@ Persist frozen selections, rule versions, cutoffs and screener/AI cohorts before
 
 Acceptance: empty results are valid; repeated jobs do not publish contradictory duplicates; exchange holidays and timezone transitions follow the contract; stale data is labeled; private access holds. A real or permitted representative end-to-end run demonstrates screening through cited report publication. The UI supports the 10–15 minute review goal. Exact deployment readiness follows 03.
 
+### Refined implementation contract — issue 03
+
+Compose capture → baseline → research → atomic report/cohort publication through the [architecture coordinator](../architecture.md). Five-minute UTC ticks derive local due times: begin 06:30 Zagreb, research closes 07:50, target publication 07:55, deadline 08:00. Stage failures checkpoint; missing current report is independently visible on a browser visit. Use the US session calendar, not European weekdays.
+
+- Publish committed assessment references, up to three main candidates, five early-watch entries, baseline, exact U_D manifest, research dispositions and cohort freeze atomically. Capture evaluation inputs before enabling routine reports, including 05's scheduled opening/action/endpoint collection. Publication crossing 08:00 is late research-only; actual commit completion determines on-time status.
+- Display empty/partial/unavailable/late, expected session, acquisition/feed/delay/expiry, retained previous dated report, evidence gaps, budgets and failures. Show new/repeat/promoted and traceable facts versus interpretations. No stale report becomes current.
+- Capture optional minutes/usefulness/understanding/effort/decision note and explicit no-response; display response denominators independently of outcomes. Tracking controls remain hidden/disabled with an explanation until 09, rather than writing incomplete lifecycle state.
+- Exercise a representative end-to-end report, holiday/DST mismatch, delayed publication, interrupted transaction and replay. Verify route privacy and reviewer navigation through citations in the 10–15 minute workflow. Document real-host and morning-observation gates still open; no synthetic run proves uptime.
+
+Proposed seams: report publication and private dashboard HTTP plus existing coordinator. Catch atomic cohorts, clock semantics and feedback; miss investment results and unobserved uptime. Confirm under TDD before new tests.
+
 ## Completion
 
 Record the evidence or delivered behavior, relevant checks and limitations in `## Answer`. Update the map with the answer link. Use the repository's claim/completion workflow when work actually starts; do not mark planned work complete.
