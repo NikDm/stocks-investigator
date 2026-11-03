@@ -10,6 +10,7 @@ export const identitySchema = z.object({
   providerAssetId: z.string().optional(),
 });
 export const beginSchema = z.object({
+  splitVolumeVerified: z.boolean().default(false),
   id: z.string().min(1).max(150), reportDate: dateSchema, calendar: calendarSchema, calendarFrom: dateSchema, calendarThrough: dateSchema,
   instruments: z.array(z.object({ ticker: z.string(), isin: z.string(), type: z.string(), currencyCode: z.string(), workingScheduleId: z.coerce.number().int() })),
   exchanges: z.array(z.object({ name: z.string(), workingSchedules: z.array(z.object({ id: z.coerce.number().int() })) })),
@@ -21,7 +22,7 @@ export type Identity = z.infer<typeof identitySchema>;
 export type Decision = { ticker: string; isin: string; reason: string; identity: Identity | null; inputIds: string[] };
 export type Snapshot = { ruleVersion: 'screen-eval-v1'; id: string; reportDate: string; expectedSession: string; deadline: number; open: number; close: number;
   auctionAfter: number; referenceDeadline: number; startedAt: number; cutoff: number | null; status: string;
-  mappingVersion: string; sourceReceipts: string[]; decisions: Decision[]; calendar: z.infer<typeof calendarSchema>; calendarFrom: string; calendarThrough: string };
+  splitVolumeVerified?: boolean; mappingVersion: string; sourceReceipts: string[]; decisions: Decision[]; calendar: z.infer<typeof calendarSchema>; calendarFrom: string; calendarThrough: string };
 export const decimal = z.string().regex(/^(0|[1-9]\d*)(\.\d+)?$/).max(60);
 export const barSchema = z.object({ t: z.string().datetime({ offset: true }), o: decimal, h: decimal, l: decimal, c: decimal, v: decimal });
 export type Bar = z.infer<typeof barSchema>;

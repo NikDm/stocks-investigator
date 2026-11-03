@@ -1,6 +1,6 @@
 # Stocks Investigator
 
-Private investment research foundation: one strict TypeScript Hono Worker, D1 migrations and a checkpointed five-minute Cron coordinator. This milestone uses **synthetic records only**. Discovery, market adapters and the morning report arrive in later tickets. Nothing is hosted or provisioned by this implementation.
+Private investment research foundation: one strict TypeScript Hono Worker, D1 migrations and a checkpointed five-minute Cron coordinator. Local market capture and deterministic momentum screening are implemented. Live morning discovery and evidence research remain pending. Nothing is hosted or provisioned by this implementation.
 
 ## Local setup
 
@@ -48,3 +48,5 @@ Wrangler's scheduled testing endpoint is local tooling only: start `npm run dev 
 [Operations and deployment](docs/operations.md) describes security bindings, publication, budgets, recovery, deploy/rollback and the outstanding production gates. [Issue 04 evidence](.scratch/investment-intelligence-mvp/issues/04-hosted-foundation.md#answer) records the delivered milestone and limitations. Domain language is in [CONTEXT.md](CONTEXT.md).
 
 Market capture (issue 05) is documented in [the capture runbook](docs/market-capture.md). It is disabled by default and remains research-only; live identity reconciliation, runtime measurements and three observed pre-08:00 sessions are outstanding.
+
+Deterministic screening (issue 06) is documented in [the screening runbook](docs/screening.md), including decimal rules, immutable baseline/queue, checkpointing, inspection and remaining operational gates.

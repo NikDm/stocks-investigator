@@ -1,3 +1,4 @@
+import { Screener } from '../screening/persistence';
 import { z } from 'zod';
 import { Foundation, type Lease, type Run } from '../persistence';
 import { MarketCapture } from './capture';
@@ -62,7 +63,7 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
       await store.renew(lease,clock());
       const state = (await db.prepare('SELECT phase,cursor FROM market_run_state WHERE run_id=?').bind(lease.runId).first<{ phase: string; cursor: number }>())!;
       let phase = state.phase, cursor = state.cursor;
-      const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
+      const queryReserve = ({ bootstrap: 800, resolve: 500, plan: 32, acquire: 200, qualify: 20, screening: 65, evaluation: 800, finish: 50 } as Record<string,number>)[phase] ?? 50;
       if (queriesRemaining < queryReserve) break;
       queriesRemaining -= queryReserve;
       if (phase === 'bootstrap') {
@@ -77,7 +78,7 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
         const result = await bootstrap.result(lease.runId); if (!result) throw new Error('incomplete_bootstrap');
         if (!result.calendar.some(s => s.date === command.reportDate)) { await finish(store,lease,{ status: 'no_report', reason: 'exchange_closed' },clock); break; }
         await capture.begin(lease,{ id: lease.runId, reportDate: command.reportDate, ...result,
-          calendarFrom: shiftDate(command.reportDate,-150), calendarThrough: shiftDate(command.reportDate,75), mappingVersion: `mapping:${lease.runId}` });
+          calendarFrom: shiftDate(command.reportDate,-150), calendarThrough: shiftDate(command.reportDate,75), mappingVersion: `mapping:${lease.runId}`, splitVolumeVerified: true });
         phase = 'plan'; cursor = 0;
       } else if (phase === 'plan') {
         const count = await planHistory(capture,lease,lease.runId,cursor,command.seed); cursor += count;
@@ -88,7 +89,9 @@ export async function drainMarket(store: Foundation, env: MarketEnv, candidate: 
         if (pending!.total === 0) phase = 'qualify';
         else if (!result.committed) break;
       } else if (phase === 'qualify') {
-        if (await capture.finalize(lease,lease.runId)) phase = 'evaluation';
+        if (await capture.finalize(lease,lease.runId)) phase = 'screening';
+      } else if (phase === 'screening') {
+        if (await new Screener(capture,clock).step(lease,lease.runId)) phase = 'evaluation';
       } else if (phase === 'evaluation') {
         const snapshot = (await capture.snapshot(lease.runId))!;
         await planEvaluation(capture,lease,lease.runId,snapshot.expectedSession); phase = 'finish';

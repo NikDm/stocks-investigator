@@ -1,6 +1,6 @@
 # Market capture
 
-Issue [05](../.scratch/investment-intelligence-mvp/issues/05-market-snapshots.md) implements the `screen-eval-v1` market boundary. This is local capture software, not a deployed morning report. Screening/ranking and publication of selections belong to later tickets. Keep both job switches disabled until the operational gates below are satisfied.
+Issue [05](../.scratch/investment-intelligence-mvp/issues/05-market-snapshots.md) implements the `screen-eval-v1` market boundary. This is local capture software, not a deployed morning report. Deterministic screening/ranking is documented in [screening](screening.md); research and publication of selections belong to later tickets. Keep both job switches disabled until the operational gates below are satisfied.
 
 ## Data and replay
 
@@ -10,7 +10,7 @@ Normalized raw/split bars, opening events and actions are content-addressed and 
 
 Frozen manifests reference the exact inputs used. Decisions and manifests cannot be updated/deleted after freezing. Collection of raw outcome observations and reference revisions can continue without changing those decisions. Reads of `/api/market/snapshots/:id?offset=0` require the existing private Access identity and return at most 100 decisions plus whole-manifest coverage counts. `MarketCapture.observations` also paginates at 500. No observation can be newly labeled as acquired in the past.
 
-The data-ready universe requires all 61 expected sessions, valid positive OHLC/volume and consistent bounds on both bases, verified action comparability, a raw close of at least $5, and median raw close × volume of at least $5m over 20 sessions. Eligibility comparisons use exact decimal arithmetic. Later momentum ratios/logarithms remain ticket 06. Missing expected bars, unresolved identities/actions and failed required requests remain coverage reasons. A run with gaps is partial, or unavailable when no member can qualify. Structural exclusions and below-price/liquidity decisions are distinct from acquisition failures.
+The data-ready universe requires all 61 expected sessions, valid positive OHLC/volume and consistent bounds on both bases, verified action comparability, a raw close of at least $5, and median raw close × volume of at least $5m over 20 sessions. Eligibility comparisons use decimal arithmetic with the contract’s 12-place half-even rounding. Momentum ratios/logarithms and the frozen baseline are implemented by [issue 06](screening.md). Missing expected bars, unresolved identities/actions and failed required requests remain coverage reasons. A run with gaps is partial, or unavailable when no member can qualify. Structural exclusions and below-price/liquidity decisions are distinct from acquisition failures.
 
 ## Source adapters and identity review
 

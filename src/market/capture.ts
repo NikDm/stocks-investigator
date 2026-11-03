@@ -44,7 +44,7 @@ export class MarketCapture {
     const manifest: Snapshot = { ruleVersion: 'screen-eval-v1', id: input.id, reportDate: input.reportDate, expectedSession: timing.expectedSession,
       deadline: timing.deadline, open: timing.open, close: timing.close, auctionAfter: timing.auctionAfter,
       referenceDeadline: timing.referenceDeadline, startedAt: this.clock(), cutoff: null, status: 'acquiring',
-      mappingVersion: input.mappingVersion, sourceReceipts: input.sourceReceipts, decisions: [], calendar: timing.sessions, calendarFrom: input.calendarFrom, calendarThrough: input.calendarThrough };
+      splitVolumeVerified: input.splitVolumeVerified, mappingVersion: input.mappingVersion, sourceReceipts: input.sourceReceipts, decisions: [], calendar: timing.sessions, calendarFrom: input.calendarFrom, calendarThrough: input.calendarThrough };
     const writes = [this.sql('INSERT INTO market_snapshots(id,run_id,fingerprint,manifest,report_date,horizon_end) VALUES(?,?,?,?,?,?)', input.id, lease.runId, fingerprint, JSON.stringify(manifest),input.reportDate,timing.sessions.filter(s => s.date >= input.reportDate)[29]?.date ?? null)];
     for (let offset = 0; offset < decisions.length; offset += 50) {
       const page = JSON.stringify(decisions.slice(offset, offset + 50));

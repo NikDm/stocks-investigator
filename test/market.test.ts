@@ -245,6 +245,8 @@ it('drains a real capture command from read-only provider HTTP through immutable
   expect((await store.run(run.id))?.state).toBe('completed');
   expect((await new MarketCapture(store,() => now).snapshot(run.id))?.status).toBe('complete');
   expect((await store.report(run.id))?.items[0]?.value['researchOnly']).toBe('true');
+  const { Screener } = await import('../src/screening/persistence');
+  expect(await new Screener(new MarketCapture(store,() => now),() => now).result(run.id)).toMatchObject({ universeCount: 1, baseline: [], researchQueue: [], status: 'complete' });
 });
 
 it('appends split-adjustment revisions without duplicating raw history or changing the first snapshot', async () => {

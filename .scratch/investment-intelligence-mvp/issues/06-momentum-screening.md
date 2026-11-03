@@ -1,6 +1,6 @@
 # 06 — Implement deterministic momentum screening and baseline snapshots
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 05
 
@@ -29,3 +29,5 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+2026-11-03: Implementation requested via `$implement issue 6`. Dependency 05 is resolved for local work; live operational gates remain open. Implementation/review baseline: `09cbfd18b83b41125ab1622e49efa176d7bf1841`. Proposed screening and persisted-artifact seam submitted for TDD confirmation.

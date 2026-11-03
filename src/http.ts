@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { bodyLimit } from 'hono/body-limit';
 import { csrfToken, validCsrf } from './csrf';
 import { Conflict, Foundation } from './persistence';
+import { Screener } from './screening/persistence';
 import { MarketCapture } from './market/capture';
 import { marketCommand, type MarketEnv } from './market/runtime';
 import { syntheticCommand } from './coordinator';
@@ -95,7 +96,7 @@ export function createApp(options: { keySet?: JWTVerifyGetKey } = {}) {
     const capture = new MarketCapture(new Foundation(c.env.DB));
     const snapshot = await capture.snapshot(c.req.param('id'),offset);
     if (!snapshot) return c.json({ error: 'snapshot_unavailable' },404);
-    return c.json({ snapshot, coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
+    return c.json({ snapshot, screening: await new Screener(capture).result(snapshot.id,offset), coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
   });
   app.get('/', async (c) => {
     const store = new Foundation(c.env.DB);

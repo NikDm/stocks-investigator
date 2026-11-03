@@ -38,6 +38,9 @@ INSERT INTO market_run_state VALUES('restore-run','acquire',1);
 INSERT INTO market_bootstrap_retries VALUES('restore-run','figi',1,5,'retry');
 INSERT INTO market_successor_links VALUES('restore-successor','S1','S2','2026-11-04',1,'synthetic-merger','["https://example.com/synthetic-merger"]');
 UPDATE market_snapshots SET frozen=1 WHERE id='restore-snapshot';
+INSERT INTO screening_metrics VALUES('restore-snapshot','S1','metric-hash','{"ticker":"S1","inputIds":["restore-bar"]}');
+INSERT INTO screening_ranks VALUES('restore-snapshot','S1','{"rank":1,"disposition":"research_queue"}');
+INSERT INTO screening_results VALUES('restore-snapshot','{"baseline":["S1"],"researchQueue":["S1"]}');
 """)
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')
