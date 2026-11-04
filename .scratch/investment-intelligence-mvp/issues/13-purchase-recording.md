@@ -1,6 +1,6 @@
 # 13 — Optionally record actual purchases separately from opportunity selection
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 09
 
@@ -27,3 +27,5 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 ## Comments
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
+
+2026-11-04: Implementation authorized; dependency 09 resolved. User confirmed authorized purchase-command HTTP TDD seam. Review baseline: `531a1ca64d2d00ceda014ded73d4ba02c628e054`.

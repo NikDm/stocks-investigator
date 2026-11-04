@@ -1,3 +1,5 @@
+import { purchaseList, purchaseDetail } from './purchases/view';
+import { Purchases, purchaseCommand } from './purchases/store';
 import { retrospectiveView } from './outcomes/retrospective';
 import { Outcomes } from './outcomes/store';
 import { evaluationView } from './outcomes/view';
@@ -165,6 +167,44 @@ export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => num
     const assessment = await new Tracking(new Foundation(c.env.DB),clock).version(c.req.param('id'));
     return assessment ? c.html(assessmentView(assessment,clock())) : c.text('Assessment unavailable',404);
   });
+  app.get('/api/purchases',async c => c.json({ purchases: await new Purchases(new Foundation(c.env.DB),clock).list(c.req.query('after') ?? '') }));
+  app.get('/api/purchases/:id',async c => {
+    const after = Number(c.req.query('after') ?? 0);
+    if (!Number.isSafeInteger(after) || after<0) return c.json({ error: 'invalid_cursor' },400);
+    const store = new Purchases(new Foundation(c.env.DB),clock), id = c.req.param('id');
+    const purchase = await store.get(id);
+    if (!purchase) return c.json({ error: 'purchase_unavailable' },404);
+    const events = await store.history(id,after);
+    return c.json({ purchase, history: events.map(e => e.value), events, nextAfter: events.length===100 ? events.at(-1)!.sequence : null });
+  });
+  app.get('/purchases',async c => c.html(await purchaseList(new Purchases(new Foundation(c.env.DB),clock),await csrfToken(c.env.CSRF_SECRET,c.get('identity')),c.req.query('after') ?? '')));
+  app.get('/purchases/:id',async c => {
+    const after = Number(c.req.query('after') ?? 0);
+    if (!Number.isSafeInteger(after) || after<0) return c.text('Invalid history cursor',400);
+    const html = await purchaseDetail(new Purchases(new Foundation(c.env.DB),clock),c.req.param('id'),await csrfToken(c.env.CSRF_SECRET,c.get('identity')),after);
+    return html ? c.html(html) : c.text('Purchase unavailable',404);
+  });
+  app.use('/purchases/commands',bodyLimit({ maxSize: 8192, onError: c => c.text('Request too large',413) }));
+  const purchase = async (c: import('hono').Context<{ Bindings: Env; Variables: { identity: string } }>, form: boolean) => {
+    if (c.req.header('origin')!==c.env.APP_ORIGIN) return c.text('Forbidden',403);
+    let raw: unknown, token = c.req.header('x-csrf-token') ?? '';
+    try {
+      if (form) {
+        const fields = await c.req.parseBody(); token = String(fields.csrf ?? '');
+        raw = Object.fromEntries(Object.entries(fields).filter(([key,value]) => key!=='csrf' && value!=='').map(([key,value]) => [key,key==='expectedRevision' ? Number(value) : value]));
+      } else raw = await c.req.json();
+    } catch { return c.json({ error: 'invalid_purchase_command' },400); }
+    if (!await validCsrf(c.env.CSRF_SECRET,c.get('identity'),token)) return c.text('Forbidden',403);
+    const command = purchaseCommand.safeParse(raw);
+    if (!command.success) return c.json({ error: 'invalid_purchase_command' },400);
+    try {
+      const result = await new Purchases(new Foundation(c.env.DB),clock).command(c.get('identity'),command.data);
+      return form ? c.redirect(`/purchases/${encodeURIComponent(result.purchaseId)}`,303) : c.json(result,201);
+    }
+    catch (error) { if (!(error instanceof Conflict)) throw error; return c.json({ error: 'purchase_conflict', message: error.message },409); }
+  };
+  app.post('/api/purchases',c => purchase(c,false));
+  app.post('/purchases/commands',c => purchase(c,true));
   app.get('/tracking',async c => c.html(await trackingList(new Tracking(new Foundation(c.env.DB),clock),clock())));
   app.get('/tracking/:id',async c => {
     const html = await trackingDetail(new Tracking(new Foundation(c.env.DB),clock),c.req.param('id'),clock(),await csrfToken(c.env.CSRF_SECRET,c.get('identity')));

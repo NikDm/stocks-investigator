@@ -58,3 +58,5 @@ Morning review (issue 08) is documented in [the morning runbook](docs/morning-re
 Manual pre-opening re-review (issue 10) is documented in [the refresh runbook](docs/refresh.md), including private queued commands, tracked/morning comparisons, conservative request windows, delayed-price warnings and separate immutable refresh cohorts.
 
 Prospective fixed-horizon evaluation (issue 11) is documented in [the outcomes runbook](docs/outcomes.md), including immutable calculation revisions, action reconciliation, coverage, separate morning/refresh comparisons and review-effort denominators.
+
+Optional actual purchase records (issue 13), including append-only corrections and removal history separate from tracking and research evaluation, are documented in [the purchases runbook](docs/purchases.md).

@@ -91,5 +91,9 @@ INSERT INTO outcome_planned VALUES('restore-snapshot');
 INSERT INTO market_tasks(snapshot_id,id,request,state) VALUES('restore-snapshot','restore-actions','{"kind":"actions"}','complete');
 INSERT INTO outcome_action_coverage VALUES('restore-snapshot','restore-actions','S1','2026-11-03','2026-12-15',100,0);
 """)
+for revision, action in enumerate(['record', 'correct', 'remove'], 1):
+    value = '{"purchaseId":"restore-purchase","originalRecordId":"restore-purchase","originalAcquiredAt":100,"acquiredAt":%d,"revision":%d,"securityId":"S1","purchaseDate":"2026-11-03","entryPriceUsd":"12.34","precision":"date","status":"%s"}' % (99 + revision, revision, 'removed' if action == 'remove' else 'recorded')
+    connection.execute('INSERT INTO purchase_events(identity,command_key,request_hash,purchase_id,revision,action,acquired_at,value) VALUES(?,?,?,?,?,?,?,?)',
+                       ('investor', 'restore-purchase-' + action, 'hash-' + action, 'restore-purchase', revision, action, 99 + revision, value))
 connection.execute('DELETE FROM write_guard')
 Path(sys.argv[1]).write_text('\n'.join(connection.iterdump()) + '\n')
