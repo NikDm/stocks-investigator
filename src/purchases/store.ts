@@ -7,7 +7,7 @@ const common = { purchaseId: z.string().regex(/^[\w-]{1,100}$/), expectedRevisio
 const fields = {
   securityId: z.string().trim().min(1).max(200),
   purchaseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(s => Number.isFinite(Date.parse(s)) && new Date(s).toISOString().slice(0,10)===s),
-  entryPriceUsd: z.string().max(60).regex(/^\d+(\.\d+)?$/).refine(s => new D(s).gt(0)),
+  entryPriceUsd: z.string().max(60).regex(/^\d+(\.\d+)?$/).pipe(z.string().refine(s => new D(s).gt(0))),
   opportunityId: z.string().trim().min(1).max(200).optional(), note: z.string().trim().max(500).optional(),
 };
 export const purchaseCommand = z.discriminatedUnion('action',[
@@ -44,7 +44,10 @@ export class Purchases {
     };
     const prior = await replay(); if (prior) return prior;
     const current = await this.get(command.purchaseId);
-    if ((current?.revision ?? 0)!==command.expectedRevision || current?.status==='removed' || (command.action==='record')!==(!current)) throw new Conflict('purchase revision conflict');
+    if ((current?.revision ?? 0)!==command.expectedRevision || current?.status==='removed' || (command.action==='record')!==(!current)) {
+      const original = await replay(); if (original) return original;
+      throw new Conflict('purchase revision conflict');
+    }
     const now = this.clock();
     let value: Purchase;
     if (command.action==='remove') {

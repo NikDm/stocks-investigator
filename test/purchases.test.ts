@@ -35,7 +35,7 @@ it('rejects unauthorized, forged, invalid and conflicting purchase commands', as
   expect((await createApp().request('https://research.example/api/purchases', { method: 'POST' }, {})).status).toBe(401);
   expect((await send(command, { origin: 'https://attacker.example' })).status).toBe(403);
   expect((await send(command, { 'x-csrf-token': '' })).status).toBe(403);
-  for (const invalid of [{ entryPriceUsd: '0' },{ entryPriceUsd: '-1' },{ entryPriceUsd: 'NaN' },{ purchaseDate: '2026-02-30' },{ quantity: 1 },{ securityId: '' },{ note: 'a'.repeat(501) }]) {
+  for (const invalid of [{ entryPriceUsd: '0' },{ entryPriceUsd: '-1' },{ entryPriceUsd: 'NaN' },{ entryPriceUsd: 'not-a-price' },{ purchaseDate: '2026-02-30' },{ quantity: 1 },{ securityId: '' },{ note: 'a'.repeat(501) }]) {
     expect((await send({ ...command, ...invalid })).status).toBe(400);
   }
   expect((await send({ ...command, purchaseDate: '2026-11-05' })).status).toBe(409);
@@ -73,7 +73,21 @@ it('keeps selection, frozen research and hypothetical outcomes independent of li
     expect((await post('/api/purchases',{ ...command, action: 'correct', entryPriceUsd: '101', expectedRevision: 1, key: 'linked-correction' })).status).toBe(201);
     expect((await post('/api/purchases',{ action: 'remove', purchaseId: 'linked', expectedRevision: 2, key: 'linked-remove' })).status).toBe(201);
     const after = await Promise.all(paths.map(async path => (await request(path)).text()));
-    // Tracking forms contain fresh idempotency keys on each render.
-    expect(after.map(s => s.replace(/[a-f0-9]{8}-[a-f0-9-]{27,}/g,'KEY'))).toEqual(before.map(s => s.replace(/[a-f0-9]{8}-[a-f0-9-]{27,}/g,'KEY')));
+    // Tracking forms contain fresh CSRF tokens and idempotency keys on each render.
+    expect(after.map(s => s.replace(/name="(?:csrf|key)" value="[^"]*"/g,'name="volatile"'))).toEqual(before.map(s => s.replace(/name="(?:csrf|key)" value="[^"]*"/g,'name="volatile"')));
   } finally { await f.foundation.release(f.lease,researchNow); }
+});
+
+
+it('returns the same original revision to concurrent identical retries', async () => {
+  const { request } = await authenticated(() => Date.parse('2026-11-04T12:00:00Z'));
+  const { token } = await (await request('/api/csrf')).json() as { token: string };
+  const headers = { origin: 'https://research.example', 'content-type': 'application/json', 'x-csrf-token': token };
+  const body = JSON.stringify({ action: 'record', purchaseId: 'parallel-retry', securityId: 'stable', purchaseDate: '2026-11-03', entryPriceUsd: '1', expectedRevision: 0, key: 'parallel-retry' });
+  const responses = await Promise.all(Array.from({ length: 8 },() => request('/api/purchases',{ method: 'POST', headers, body })));
+  expect(responses.map(r => r.status)).toEqual(Array(8).fill(201));
+  const values = await Promise.all(responses.map(r => r.json()));
+  expect(values.every(value => JSON.stringify(value)===JSON.stringify(values[0]))).toBe(true);
+  const history = await (await request('/api/purchases/parallel-retry')).json() as { history: unknown[] };
+  expect(history.history).toHaveLength(1);
 });
