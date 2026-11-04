@@ -1,6 +1,6 @@
 # 13 — Optionally record actual purchases separately from opportunity selection
 
-Status: claimed
+Status: resolved
 Type: task
 Blocked by: 09
 
@@ -29,3 +29,16 @@ Record the evidence or delivered behavior, relevant checks and limitations in `#
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.
 
 2026-11-04: Implementation authorized; dependency 09 resolved. User confirmed authorized purchase-command HTTP TDD seam. Review baseline: `531a1ca64d2d00ceda014ded73d4ba02c628e054`.
+
+## Answer
+
+Delivered locally on 2026-11-04: optional authenticated actual purchase records, independently of tracking and research evaluation. [Runbook](../../../docs/purchases.md), [independent Standards/Spec review](../purchase-review.md).
+
+- Private dashboard forms and JSON commands record stable security identity, date-precision purchase date and positive decimal USD actual entry price, with an optional same-security tracked-opportunity link and short note. Unlinked purchases do not require tracking. Quantity, portfolio calculations, broker synchronization and order placement remain excluded.
+- Corrections append complete field revisions; removal appends a terminal tombstone. Every revision retains the original record ID/acquisition time and its own server acquisition time. Security identity corrections use explicit removal and a separate purchase. Paginated history survives removal; SQL guards prohibit historical update/delete.
+- Access authentication, Origin/CSRF checks, strict server validation, expected revisions and identity-scoped idempotency keys protect both form and JSON commands. Concurrent conflicting corrections cannot both publish; eight concurrent identical retries return the same original revision. Malformed prices return validation errors, rather than database/unavailable errors.
+- Actual entries are labeled separately from hypothetical evaluation references. HTTP tests show selection creates no purchase and linked purchase creation/correction/removal leaves tracking, frozen research and hypothetical outcomes unchanged. No scheduled/core evaluation path depends on purchases.
+
+Verification: final full suite **127 tests / 37 files pass (219.17 seconds)**, including four purchase HTTP tests at the user-confirmed seam; strict typechecking, final Worker build dry run, and encrypted disposable backup/restore with populated purchase correction/removal history pass. Independent Standards review found no code issues; the one Spec idempotency-race finding was fixed and independently confirmed resolved. Both reviewers confirmed the corrective commit.
+
+No deployment or provisioning occurred. Purchase security IDs and entries are manually recorded, not broker/execution-verified. Browser rendering was outside the agreed test seam. Existing production readiness and live morning-usefulness gates remain unchanged; this optional feature does not gate core evaluation.
