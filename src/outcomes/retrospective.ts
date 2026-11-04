@@ -1,4 +1,5 @@
-import type { ScreenRow } from '../screening/screen';
+import { Screener } from '../screening/persistence';
+import { MarketCapture } from '../market/capture';
 import { RefreshPublication } from '../refresh/publication';
 import { Refreshes } from '../refresh/store';
 import { historicalDiscoveryView } from './retrospective-history';
@@ -53,16 +54,7 @@ export async function retrospectiveView(store:Foundation,id:string,now:number,co
       supporting.push(`H${horizon}: ${result.status}${result.reason ? ` (${escape(result.reason)})` : ''}; adjusted ${pct(result.adjusted)}`);
     }
     const revision = member.revision!;
-    const screenRow = await store.db.prepare(`SELECT m.value AS metric,r.value AS rank FROM market_decisions d
-      JOIN screening_metrics m ON m.snapshot_id=d.snapshot_id AND m.ticker=d.ticker
-      JOIN screening_ranks r ON r.snapshot_id=m.snapshot_id AND r.ticker=m.ticker
-      WHERE d.snapshot_id=? AND d.security_id=?`).bind(id,member.securityId).first<{metric:string;rank:string}>();
-    const screen = screenRow ? JSON.parse(screenRow.metric) as ScreenRow : null;
-    if (screen && screenRow) {
-      const {rs20,...ranking} = JSON.parse(screenRow.rank);
-      Object.assign(screen,ranking);
-      if (screen.metrics) screen.metrics.rs20=rs20;
-    }
+    const screen = await new Screener(new MarketCapture(store)).member(id,member.securityId);
     const decision = morning.value.decisions.find(d => d.securityId===member.securityId) ?? null;
     const watch = morning.value.watch.active.filter(w => w.securityId===member.securityId);
     const evidenceIds = [...new Set([...(decision?.assessment?.sources.map(s => s.id) ?? []),...watch.flatMap(w => w.citations.map(c => c.evidenceId))])];

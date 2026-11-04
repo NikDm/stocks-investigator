@@ -6,6 +6,11 @@ import { checkVersion, measure, rank, type ScreenResult, type ScreenRow } from '
 // Conservative local benchmark allowance; hosted CPU validation remains an operational gate.
 export const SCREENING_STAGE_CPU_RESERVATION_MS = 1500;
 type Summary = Omit<ScreenResult,'rows' | 'universe'> & { universeCount: number; rowCount: number; inputHash: string; completedAt: number };
+function savedRow(row: { metrics:string; ranking:string }):ScreenRow {
+  const metric = JSON.parse(row.metrics) as ScreenRow;
+  const { rs20, ...ranking } = JSON.parse(row.ranking) as Pick<ScreenRow,'rank' | 'failedGates' | 'disposition' | 'marketConfirmation'> & { rs20: string | null };
+  return { ...metric, ...ranking, metrics: metric.metrics ? { ...metric.metrics, rs20 } : null };
+}
 export class Screener {
   constructor(readonly capture: MarketCapture, readonly clock: () => number = Date.now) {}
   private sql(query: string, ...args: (string | number)[]) { return this.capture.foundation.db.prepare(query).bind(...args); }
@@ -55,16 +60,19 @@ export class Screener {
     await this.capture.foundation.fenced(lease,this.clock(),writes);
     return true;
   }
+  async member(snapshotId:string,securityId:string):Promise<ScreenRow|null> {
+    const row = await this.sql(`SELECT m.value AS metrics,r.value AS ranking FROM market_decisions d
+      JOIN screening_metrics m ON m.snapshot_id=d.snapshot_id AND m.ticker=d.ticker
+      JOIN screening_ranks r ON r.snapshot_id=m.snapshot_id AND r.ticker=m.ticker
+      WHERE d.snapshot_id=? AND d.security_id=?`,snapshotId,securityId).first<{metrics:string;ranking:string}>();
+    return row ? savedRow(row) : null;
+  }
   async result(snapshotId: string, offset = 0, limit = 100): Promise<(Summary & { rows: ScreenRow[]; offset: number }) | null> {
     if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('invalid screening page');
     const summary = await this.sql('SELECT value FROM screening_results WHERE snapshot_id=?',snapshotId).first<{ value: string }>();
     if (!summary) return null;
     const rows = (await this.sql(`SELECT m.value AS metrics,r.value AS ranking FROM screening_metrics m JOIN screening_ranks r ON r.snapshot_id=m.snapshot_id AND r.ticker=m.ticker
-      WHERE m.snapshot_id=? ORDER BY m.ticker LIMIT ? OFFSET ?`,snapshotId,limit,offset).all<{ metrics: string; ranking: string }>()).results.map(r => {
-        const metric = JSON.parse(r.metrics) as ScreenRow;
-        const { rs20, ...ranking } = JSON.parse(r.ranking) as Pick<ScreenRow,'rank' | 'failedGates' | 'disposition' | 'marketConfirmation'> & { rs20: string | null };
-        return { ...metric, ...ranking, metrics: metric.metrics ? { ...metric.metrics, rs20 } : null };
-      });
+      WHERE m.snapshot_id=? ORDER BY m.ticker LIMIT ? OFFSET ?`,snapshotId,limit,offset).all<{ metrics: string; ranking: string }>()).results.map(savedRow);
     return { ...JSON.parse(summary.value) as Summary, rows, offset };
   }
 }
