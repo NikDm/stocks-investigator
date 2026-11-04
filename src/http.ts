@@ -1,3 +1,4 @@
+import { retrospectiveView } from './outcomes/retrospective';
 import { Outcomes } from './outcomes/store';
 import { evaluationView } from './outcomes/view';
 import { Refreshes, refreshCommand } from './refresh/store';
@@ -106,6 +107,10 @@ export function createApp(options: { keySet?: JWTVerifyGetKey; clock?: () => num
     if (!snapshot) return c.json({ error: 'snapshot_unavailable' },404);
     const watch = await capture.foundation.db.prepare('SELECT value FROM early_watch_publications WHERE snapshot_id=?').bind(snapshot.id).first<{ value: string }>();
     return c.json({ snapshot, screening: await new Screener(capture).result(snapshot.id,offset), research: await new ResearchPublisher(capture.foundation).publication(snapshot.id), earlyWatch: watch ? JSON.parse(watch.value) : null, coverage: await capture.coverage(snapshot.id), progress: await capture.progress(snapshot.id), offset, pageSize: 100 });
+  });
+  app.get('/retrospective/:id',async c => {
+    const html = await retrospectiveView(new Foundation(c.env.DB),c.req.param('id'),clock(),c.req.query('coverageAfter') ?? '');
+    return html ? c.html(html) : c.text('Retrospective unavailable',404);
   });
   app.get('/evaluation/:id',async c => {
     const horizon = Number(c.req.query('horizon') ?? 20);

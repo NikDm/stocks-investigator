@@ -1,6 +1,6 @@
 # 12 — Show prospective strong performers not surfaced by discovery
 
-Status: needs-triage
+Status: claimed
 Type: task
 Blocked by: 11
 
@@ -27,5 +27,7 @@ Read contemporaneous inputs/evidence by immutable IDs and cutoff. Evidence acqui
 Record the evidence or delivered behavior, relevant checks and limitations in `## Answer`. Update the map with the answer link. Use the repository's claim/completion workflow when work actually starts; do not mark planned work complete.
 
 ## Comments
+
+Implementation authorized via `$implement issue 12`. Dependency 11 is resolved. Proposed TDD seam confirmation requested before adding tests.
 
 Created from the product discovery interview. Work is milestone-based with no weekly time commitment; the investor picks up features as time allows.

@@ -44,7 +44,7 @@ export async function evaluationView(store:Foundation,id:string,horizon:10|20|30
       <p>Not selected by AI: ${escape(c.notSelectedByAI.ids.join(', ') || 'none')}.</p></section>`;
   }
   const feedback = await new ReviewFeedback(store).summary(morning.report_date.slice(0,7));
-  return page(`Prospective evaluation — ${morning.report_date}`,`<nav><a href="/morning/${encodeURIComponent(id)}">Morning report</a>${([10,20,30] as const).map(h => `<a href="${base}?horizon=${h}">H${h}${h===20 ? ' (primary)' : ''}</a>`).join('')}</nav>
+  return page(`Prospective evaluation — ${morning.report_date}`,`<nav><a href="/retrospective/${encodeURIComponent(id)}">Not-surfaced review</a><a href="/morning/${encodeURIComponent(id)}">Morning report</a>${([10,20,30] as const).map(h => `<a href="${base}?horizon=${h}">H${h}${h===20 ? ' (primary)' : ''}</a>`).join('')}</nav>
     <p>Rule ${escape(morning.rule_version)}. H${horizon}; entry ${morning.report_date} is session one; endpoint ${escape(members.endpoint ?? 'calendar unavailable')}. Provider daily close includes eligible extended-session activity.</p>
     <p>Hypothetical references, not executable fills or actual purchase returns. Gross dividends include entitled receivables; no tax, FX or reinvestment. Daily-close downside does not describe intraday losses.</p>
     <p>Small samples, overlapping daily cohorts and missing-data coverage bias cannot establish statistical edge or outperformance. Outcomes never change historical selections.</p>
